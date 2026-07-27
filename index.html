@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0288D1">
+    <meta name="description" content="Dronigest - Gestion integral de actividades de drones">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dronigest">
+    <meta name="application-name" content="Dronigest">
+    <meta name="msapplication-TileColor" content="#0288D1">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="geo.position" content="">
+    <meta name="ICBM" content="">
+    <title>Dronigest - Gestion de Drones</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-helicopter"></i>
+                    <span>Dronigest</span>
+                </div>
+                <button id="sidebarToggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard">
+                    <a href="#"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+                </li>
+                <li class="nav-item" data-page="vuelos">
+                    <a href="#"><i class="fas fa-plane"></i><span>Vuelos</span></a>
+                </li>
+                <li class="nav-item" data-page="pilotos">
+                    <a href="#"><i class="fas fa-user-pilot"></i><span>Pilotos y Auxiliares</span></a>
+                </li>
+                <li class="nav-item" data-page="tiposVuelo">
+                    <a href="#"><i class="fas fa-tags"></i><span>Tipos de Vuelo</span></a>
+                </li>
+                <li class="nav-item" data-page="checklists">
+                    <a href="#"><i class="fas fa-clipboard-check"></i><span>Checklists</span></a>
+                </li>
+                <li class="nav-item" data-page="equipos">
+                    <a href="#"><i class="fas fa-drone"></i><span>Equipos y Drones</span></a>
+                </li>
+                <li class="nav-item" data-page="trabajos">
+                    <a href="#"><i class="fas fa-briefcase"></i><span>Trabajos</span></a>
+                </li>
+                <li class="nav-item" data-page="inspecciones">
+                    <a href="#"><i class="fas fa-search"></i><span>Inspecciones</span></a>
+                </li>
+                <li class="nav-item" data-page="agricola">
+                    <a href="#"><i class="fas fa-seedling"></i><span>Trabajos Agrícolas</span></a>
+                </li>
+                <li class="nav-item" data-page="meteorologia">
+                    <a href="#"><i class="fas fa-cloud-sun"></i><span>Meteorología</span></a>
+                </li>
+                <li class="nav-divider"></li>
+                <li class="nav-item nav-external" data-page="comunicacion">
+                    <a href="https://drones.ses.mir.es/drones-web/acceso" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-landmark"></i><span>Comunicar Vuelo (Interior)</span>
+                    </a>
+                </li>
+                <li class="nav-item nav-external" data-page="enaire">
+                    <a href="https://drones.enaire.es" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-map-marked-alt"></i><span>ENAIRE Drones</span>
+                    </a>
+                </li>
+                <li class="nav-item nav-external" data-page="aesa">
+                    <a href="https://www.seguridadaerea.gob.es" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-shield-alt"></i><span>AESA</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="location-info" id="locationInfo">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Obteniendo ubicación...</span>
+                </div>
+            </div>
+        </nav>
+
+        <main id="mainContent" class="main-content">
+            <header class="top-bar">
+                <button id="mobileMenuBtn" class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="top-bar-actions">
+                    <a href="https://drones.ses.mir.es/drones-web/acceso" target="_blank" rel="noopener noreferrer" class="btn-icon btn-ministerio" title="Comunicar Vuelo - Ministerio del Interior">
+                        <i class="fas fa-landmark"></i>
+                    </a>
+                    <button class="btn-icon" id="btnGeolocate" title="Mi ubicación">
+                        <i class="fas fa-crosshairs"></i>
+                    </button>
+                    <button class="btn-icon" id="btnWeather" title="Meteorología actual">
+                        <i class="fas fa-cloud-sun"></i>
+                    </button>
+                    <button class="btn-install btn-primary" id="btnInstall" style="display:none;">
+                        <i class="fas fa-download"></i> Instalar App
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- DASHBOARD -->
+                <section id="page-dashboard" class="page active">
+                    <div class="dashboard-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-plane"></i></div>
+                            <div class="stat-info">
+                                <h3 id="statVuelos">0</h3>
+                                <p>Vuelos totales</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-user"></i></div>
+                            <div class="stat-info">
+                                <h3 id="statPilotos">0</h3>
+                                <p>Pilotos activos</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-helicopter"></i></div>
+                            <div class="stat-info">
+                                <h3 id="statDrones">0</h3>
+                                <p>Drones registrados</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-briefcase"></i></div>
+                            <div class="stat-info">
+                                <h3 id="statTrabajos">0</h3>
+                                <p>Trabajos realizados</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dashboard-row">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="fas fa-calendar-alt"></i> Próximos Vuelos</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="proximosVuelos" class="list-container">
+                                    <p class="empty-state">No hay vuelos programados</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="fas fa-cloud-sun"></i> Meteorología</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="dashboardWeather" class="weather-widget">
+                                    <p class="empty-state">Cargando meteorología...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-history"></i> Actividad Reciente</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="actividadReciente" class="list-container">
+                                <p class="empty-state">Sin actividad reciente</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quick-links">
+                        <h3><i class="fas fa-link"></i> Enlaces Rápidos</h3>
+                        <div class="quick-links-grid">
+                            <a href="https://drones.ses.mir.es/drones-web/acceso" target="_blank" rel="noopener noreferrer" class="quick-link-card">
+                                <div class="ql-icon" style="background:linear-gradient(135deg,#C62828,#B71C1C);"><i class="fas fa-landmark"></i></div>
+                                <div class="ql-text">
+                                    <strong>Comunicar Vuelo</strong>
+                                    <span>Ministerio del Interior</span>
+                                </div>
+                                <i class="fas fa-external-link-alt ql-arrow"></i>
+                            </a>
+                            <a href="https://drones.enaire.es" target="_blank" rel="noopener noreferrer" class="quick-link-card">
+                                <div class="ql-icon" style="background:linear-gradient(135deg,#1565C0,#0D47A1);"><i class="fas fa-map-marked-alt"></i></div>
+                                <div class="ql-text">
+                                    <strong>ENAIRE Drones</strong>
+                                    <span>Mapa aeronáutico</span>
+                                </div>
+                                <i class="fas fa-external-link-alt ql-arrow"></i>
+                            </a>
+                            <a href="https://www.seguridadaerea.gob.es" target="_blank" rel="noopener noreferrer" class="quick-link-card">
+                                <div class="ql-icon" style="background:linear-gradient(135deg,#2E7D32,#1B5E20);"><i class="fas fa-shield-alt"></i></div>
+                                <div class="ql-text">
+                                    <strong>AESA</strong>
+                                    <span>Seguridad Aérea</span>
+                                </div>
+                                <i class="fas fa-external-link-alt ql-arrow"></i>
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VUELOS -->
+                <section id="page-vuelos" class="page">
+                    <div class="page-actions">
+                        <button class="btn-primary" onclick="Dronigest.Vuelos.nuevo()">
+                            <i class="fas fa-plus"></i> Nuevo Vuelo
+                        </button>
+                        <a href="https://drones.ses.mir.es/drones-web/acceso" target="_blank" rel="noopener noreferrer" class="btn-ministerio-vuelo">
+                            <i class="fas fa-landmark"></i> Comunicar Vuelo (Interior)
+                        </a>
+                        <div class="filter-group">
+                            <input type="date" id="filtroFechaVuelo" class="form-control" onchange="Dronigest.Vuelos.filtrar()">
+                            <select id="filtroEstadoVuelo" class="form-control" onchange="Dronigest.Vuelos.filtrar()">
+                                <option value="">Todos los estados</option>
+                                <option value="programado">Programado</option>
+                                <option value="en_curso">En curso</option>
+                                <option value="completado">Completado</option>
+                                <option value="cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="vuelos-layout">
+                        <div class="card map-card">
+                            <div class="card-header">
+                                <h2><i class="fas fa-map"></i> Mapa ENAIRE Drones</h2>
+                                <button class="btn-sm" onclick="Dronigest.Mapa.geolocalizar()">
+                                    <i class="fas fa-crosshairs"></i> Mi ubicación
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="map" class="map-container"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="fas fa-list"></i> Lista de Vuelos</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="listaVuelos" class="table-container">
+                                    <p class="empty-state">No hay vuelos registrados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PILOTOS Y AUXILIARES -->
+                <section id="page-pilotos" class="page">
+                    <div class="page-actions">
+                        <button class="btn-primary" onclick="Dronigest.Pilotos.nuevoPiloto()">
+                            <i class="fas fa-plus"></i> Nuevo Piloto
+                        </button>
+                        <button class="btn-secondary" onclick="Dronigest.Pilotos.nuevoAuxiliar()">
+                            <i class="fas fa-plus"></i> Nuevo Auxiliar
+                        </button>
+                    </div>
+                    <div class="tabs">
+                        <button class="tab active" onclick="Dronigest.Pilotos.mostrarTab('pilotos')">
+                            <i class="fas fa-user"></i> Pilotos
+                        </button>
+                        <button class="tab" onclick="Dronigest.Pilotos.mostrarTab('auxiliares')">
+                            <i class="fas fa-users"></i> Auxiliares
+                        </button>
+                    </div>
+                    <div id="tabPilotos" class="tab-content active">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="listaPilotos" class="table-container">
+                                    <p class="empty-state">No hay pilotos registrados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tabAuxiliares" class="tab-content">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="listaAuxiliares" class="table-container">
+                                    <p class="empty-state">No hay auxiliares registrados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TIPOS DE VUELO -->
+                <section id="page-tiposVuelo" class="page">
+                    <div class="page-actions">
+                        <button class="btn-primary" onclick="Dronigest.TiposVuelo.nuevo()">
+                            <i class="fas fa-plus"></i> Nuevo Tipo de Vuelo
+                        </button>
+                        <button class="btn-secondary" onclick="Dronigest.TiposVuelo.nuevaCategoria()">
+                            <i class="fas fa-plus"></i> Nueva Categoría
+                        </button>
+                    </div>
+                    <div class="tabs">
+                        <button class="tab active" onclick="Dronigest.TiposVuelo.mostrarTab('tipos')">
+                            <i class="fas fa-plane"></i> Tipos de Vuelo
+                        </button>
+                        <button class="tab" onclick="Dronigest.TiposVuelo.mostrarTab('categorias')">
+                            <i class="fas fa-layer-group"></i> Categorías
+                        </button>
+                    </div>
+                    <div id="tabTiposVuelo" class="tab-content active">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="listaTiposVuelo" class="table-container">
+                                    <p class="empty-state">No hay tipos de vuelo registrados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tabCategorias" class="tab-content">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="listaCategorias" class="table-container">
+                                    <p class="empty-state">No hay categorías registradas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CHECKLISTS -->
+                <section id="page-checklists" class="page">
+                    <div class="page-actions">
+                        <button class="btn-primary" onclick="Dronigest.Checklists.nuevo()">
+                            <i class="fas fa-plus"></i> Nuevo Checklist
+                        </button>
+                    </div>
+                    <div class="tabs">
+                        <button class="tab active" onclick="Dronigest.Checklists.mostrarTab('inicio')">
+                            <i class="fas fa-play-circle"></i> Inicio de Vuelo
+                        </button>
+                        <button class="tab" onclick="Dronigest.Checklists.mostrarTab('fin')">
+                            <i class="fas fa-stop-circle"></i> Fin de Vuelo
+                        </button>
+                        <button class="tab" onclick="Dronigest.Checklists.mostrarTab('historial')">
+                            <i class="fas fa-history"></i> Historial
+                        </button>
+                    </div>
+                    <div id="tabChecklistInicio" class="tab-content active">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Checklist de Inicio de Vuelo</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="checklistInicio" class="checklist-container">
+                                    <div class="checklist-section">
+                                        <h3><i class="fas fa-helicopter"></i> Estado del Drone</h3>
+                                        <label class="checklist-item"><input type="checkbox" data-check="droneEstadoCarcasa"><span>Carcasa sin daños visibles</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="droneHelices"><span>Helices en buen estado</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="droneBateria"><span>Batería cargada (>80%)</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="droneSDCard"><span>Tarjeta SD insertada y con espacio</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="droneFirmware"><span>Firmware actualizado</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="droneSensores"><span>Sensores limpios y funcionales</span></label>
+                                    </div>
+                                    <div class="checklist-section">
+                                        <h3><i class="fas fa-cog"></i> Equipo de Control</h3>
+                                        <label class="checklist-item"><input type="checkbox" data-check="ctrlMando"><span>Mando de control encendido y vinculado</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="ctrlBateriaMando"><span>Batería del mando cargada</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="ctrlAntenas"><span>Antenas desplegadas</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="ctrlPantalla"><span>Pantalla/tablet conectada</span></label>
+                                    </div>
+                                    <div class="checklist-section">
+                                        <h3><i class="fas fa-map-marked-alt"></i> Zona de Vuelo</h3>
+                                        <label class="checklist-item"><input type="checkbox" data-check="zonaNotificacion"><span>Notificación a AESA realizada</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="zonaPermisos"><span>Permisos de vuelo obtenidos</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="zonaRestricciones"><span>Restricciones aéreas verificadas</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="zonaEntorno"><span>Entorno seguro para despegue</span></label>
+                                    </div>
+                                    <div class="checklist-section">
+                                        <h3><i class="fas fa-cloud-sun"></i> Condiciones Meteorológicas</h3>
+                                        <label class="checklist-item"><input type="checkbox" data-check="metViento"><span>Viento dentro de límites (&lt;40 km/h)</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="metVisibilidad"><span>Visibilidad adecuada (&gt;1500m)</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="metLluvia"><span>Sin precipitaciones</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="metNubosidad"><span>Nubosidad adecuada para el vuelo</span></label>
+                                    </div>
+                                    <div class="checklist-section">
+                                        <h3><i class="fas fa-user-shield"></i> Seguridad Personal</h3>
+                                        <label class="checklist-item"><input type="checkbox" data-check="segPlanVuelo"><span>Plan de vuelo establecido</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="segContacto"><span>Contacto de emergencia informado</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="segEquipoProteccion"><span>Equipo de protección personal</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="segPrimerosAuxilios"><span>Botiquín de primeros auxilios disponible</span></label>
+                                    </div>
+                                </div>
+                                <div class="form-actions" style="margin-top:1rem;">
+                                    <button class="btn-primary" onclick="Dronigest.Checklists.guardarInicio()">
+                                        <i class="fas fa-save"></i> Guardar Checklist Inicio
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tabChecklistFin" class="tab-content">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2>Checklist de Fin de Vuelo</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="checklistFin" class="checklist-container">
+                                    <div class="checklist-section">
+                                        <h3><i class="fas fa-helicopter"></i> Estado del Drone</h3>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finDroneCarcasa"><span>Carcasa inspeccionada sin daños</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finDroneHelices"><span>Helices sin desgaste anómalo</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finDroneBateria"><span>Batería retirada y en posición segura</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finDroneSDCard"><span>Tarjeta SD retirada y datos descargados</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finDroneLimpieza"><span>Drone limpio y sin residuos</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finDroneSensores"><span>Sensores limpios</span></label>
+                                    </div>
+                                    <div class="checklist-section">
+                                        <h3><i class="fas fa-cog"></i> Equipo de Control</h3>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finCtrlMando"><span>Mando apagado y guardado</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finCtrlBateria"><span>Batería del mando en proceso de carga</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finCtrlAccesorios"><span>Accesorios guardados correctamente</span></label>
+                                    </div>
+                                    <div class="checklist-section">
+                                        <h3><i class="fas fa-database"></i> Datos y Documentación</h3>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finDatosGrabados"><span>Datos de vuelo registrados</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finFotosVideos"><span>Fotos/videos descargados y verificados</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finInforme"><span>Informe de vuelo completado</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finIncidencias"><span>Incidencias registradas (si las hubiera)</span></label>
+                                    </div>
+                                    <div class="checklist-section">
+                                        <h3><i class="fas fa-tools"></i> Mantenimiento</h3>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finMantenimiento"><span>Necesidades de mantenimiento identificadas</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finReposicion"><span>Baterías recargadas / reposición pendiente</span></label>
+                                        <label class="checklist-item"><input type="checkbox" data-check="finAlmacenamiento"><span>Equipo almacenado en condiciones adecuadas</span></label>
+                                    </div>
+                                </div>
+                                <div class="form-actions" style="margin-top:1rem;">
+                                    <button class="btn-primary" onclick="Dronigest.Checklists.guardarFin()">
+                                        <i class="fas fa-save"></i> Guardar Checklist Fin
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tabChecklistHistorial" class="tab-content">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="fas fa-history"></i> Historial de Checklists</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="historialChecklists" class="table-container">
+                                    <p class="empty-state">No hay checklists completados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- EQUIPOS Y DRONES -->
+                <section id="page-equipos" class="page">
+                    <div class="page-actions">
+                        <button class="btn-primary" onclick="Dronigest.Equipos.nuevoDrone()">
+                            <i class="fas fa-plus"></i> Nuevo Drone
+                        </button>
+                        <button class="btn-secondary" onclick="Dronigest.Equipos.nuevoModelo()">
+                            <i class="fas fa-plus"></i> Nuevo Modelo
+                        </button>
+                        <button class="btn-secondary" onclick="Dronigest.Equipos.nuevoAccesorio()">
+                            <i class="fas fa-plus"></i> Nuevo Accesorio
+                        </button>
+                    </div>
+                    <div class="tabs">
+                        <button class="tab active" onclick="Dronigest.Equipos.mostrarTab('drones')">
+                            <i class="fas fa-helicopter"></i> Drones
+                        </button>
+                        <button class="tab" onclick="Dronigest.Equipos.mostrarTab('modelos')">
+                            <i class="fas fa-th-list"></i> Modelos
+                        </button>
+                        <button class="tab" onclick="Dronigest.Equipos.mostrarTab('accesorios')">
+                            <i class="fas fa-puzzle-piece"></i> Accesorios
+                        </button>
+                    </div>
+                    <div id="tabDrones" class="tab-content active">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="listaDrones" class="table-container">
+                                    <p class="empty-state">No hay drones registrados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tabModelos" class="tab-content">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="listaModelos" class="table-container">
+                                    <p class="empty-state">No hay modelos registrados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tabAccesorios" class="tab-content">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="listaAccesorios" class="table-container">
+                                    <p class="empty-state">No hay accesorios registrados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TRABAJOS -->
+                <section id="page-trabajos" class="page">
+                    <div class="page-actions">
+                        <button class="btn-primary" onclick="Dronigest.Trabajos.nuevo()">
+                            <i class="fas fa-plus"></i> Nuevo Trabajo
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-briefcase"></i> Trabajos Realizados</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="listaTrabajos" class="table-container">
+                                <p class="empty-state">No hay trabajos registrados</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- INSPECCIONES -->
+                <section id="page-inspecciones" class="page">
+                    <div class="page-actions">
+                        <button class="btn-primary" onclick="Dronigest.Inspecciones.nueva()">
+                            <i class="fas fa-plus"></i> Nueva Inspección
+                        </button>
+                    </div>
+                    <div class="tabs">
+                        <button class="tab active" onclick="Dronigest.Inspecciones.mostrarTab('solar')">
+                            <i class="fas fa-solar-panel"></i> Plantas Solares
+                        </button>
+                        <button class="tab" onclick="Dronigest.Inspecciones.mostrarTab('eolica')">
+                            <i class="fas fa-wind"></i> Torres Eólicas
+                        </button>
+                        <button class="tab" onclick="Dronigest.Inspecciones.mostrarTab('tendidos')">
+                            <i class="fas fa-bolt"></i> Tendidos Eléctricos
+                        </button>
+                        <button class="tab" onclick="Dronigest.Inspecciones.mostrarTab('superficies')">
+                            <i class="fas fa-search"></i> Control Superficies
+                        </button>
+                    </div>
+                    <div id="tabInspeccionSolar" class="tab-content active">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="listaSolar" class="table-container">
+                                    <p class="empty-state">No hay inspecciones de plantas solares</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tabInspeccionEolica" class="tab-content">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="listaEolica" class="table-container">
+                                    <p class="empty-state">No hay inspecciones de torres eólicas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tabInspeccionTendidos" class="tab-content">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="listaTendidos" class="table-container">
+                                    <p class="empty-state">No hay inspecciones de tendidos eléctricos</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tabInspeccionSuperficies" class="tab-content">
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="listaSuperficies" class="table-container">
+                                    <p class="empty-state">No hay inspecciones de superficies</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TRABAJOS AGRICOLAS -->
+                <section id="page-agricola" class="page">
+                    <div class="page-actions">
+                        <button class="btn-primary" onclick="Dronigest.Agricola.nuevo()">
+                            <i class="fas fa-plus"></i> Nuevo Trabajo Agrícola
+                        </button>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-seedling"></i> Trabajos Agrícolas</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="listaAgricola" class="table-container">
+                                <p class="empty-state">No hay trabajos agrícolas registrados</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- METEOROLOGÍA -->
+                <section id="page-meteorologia" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-cloud-sun"></i> Condiciones Meteorológicas (AEMET)</h2>
+                            <button class="btn-sm" onclick="Dronigest.Meteo.obtenerMeteorologia()">
+                                <i class="fas fa-sync-alt"></i> Actualizar
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="meteoActual" class="weather-dashboard">
+                                <div class="weather-loading">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Cargando datos meteorológicos...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top:1rem;">
+                        <div class="card-header">
+                            <h2><i class="fas fa-calendar"></i> Previsión</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="meteoForecast" class="weather-forecast">
+                                <p class="empty-state">Cargando previsión...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top:1rem;">
+                        <div class="card-header">
+                            <h2><i class="fas fa-check-circle"></i> Evaluación para Vuelo</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="meteoEvaluacion" class="evaluacion-vuelo">
+                                <p class="empty-state">Evaluación no disponible</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal General -->
+    <div id="modal" class="modal" style="display:none;">
+        <div class="modal-overlay" onclick="Dronigest.Modal.cerrar()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Título</h3>
+                <button class="modal-close" onclick="Dronigest.Modal.cerrar()">&times;</button>
+            </div>
+            <div id="modalBody" class="modal-body"></div>
+            <div id="modalFooter" class="modal-footer"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Android Install Banner -->
+    <div id="installBanner" class="install-banner" style="display:none;">
+        <div class="install-banner-content">
+            <div class="install-banner-icon">
+                <img src="icons/icon-192.png" alt="Dronigest" width="48" height="48">
+            </div>
+            <div class="install-banner-text">
+                <strong>Instalar Dronigest</strong>
+                <span>Annade la app a tu pantalla de inicio</span>
+            </div>
+            <button class="install-banner-btn" id="installBannerBtn">Instalar</button>
+            <button class="install-banner-close" id="installBannerClose">&times;</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
