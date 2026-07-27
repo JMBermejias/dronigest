@@ -66,6 +66,9 @@
                 <li class="nav-item" data-page="agricola">
                     <a href="#"><i class="fas fa-seedling"></i><span>Trabajos Agrícolas</span></a>
                 </li>
+                <li class="nav-item" data-page="cinegetico">
+                    <a href="#"><i class="fas fa-crosshairs"></i><span>Control Cinegético</span></a>
+                </li>
                 <li class="nav-item" data-page="meteorologia">
                     <a href="#"><i class="fas fa-cloud-sun"></i><span>Meteorología</span></a>
                 </li>
@@ -146,6 +149,13 @@
                             <div class="stat-info">
                                 <h3 id="statTrabajos">0</h3>
                                 <p>Trabajos realizados</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:linear-gradient(135deg,#E65100,#BF360C);"><i class="fas fa-crosshairs"></i></div>
+                            <div class="stat-info">
+                                <h3 id="statCinegetico">0</h3>
+                                <p>Control Cinegético</p>
                             </div>
                         </div>
                     </div>
@@ -607,6 +617,110 @@
                         <div class="card-body">
                             <div id="listaAgricola" class="table-container">
                                 <p class="empty-state">No hay trabajos agrícolas registrados</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CONTROL CINEGETICO -->
+                <section id="page-cinegetico" class="page">
+                    <div class="page-actions">
+                        <button class="btn-primary" onclick="Dronigest.Cinegetico.nuevo()">
+                            <i class="fas fa-plus"></i> Nuevo Registro
+                        </button>
+                        <button class="btn-secondary" onclick="Dronigest.Cinegetico.nuevaZona()">
+                            <i class="fas fa-plus"></i> Nueva Zona Cinegética
+                        </button>
+                    </div>
+                    <div class="tabs">
+                        <button class="tab active" onclick="Dronigest.Cinegetico.mostrarTab('registros')">
+                            <i class="fas fa-crosshairs"></i> Registros
+                        </button>
+                        <button class="tab" onclick="Dronigest.Cinegetico.mostrarTab('zonas')">
+                            <i class="fas fa-map"></i> Zonas Cinegéticas
+                        </button>
+                        <button class="tab" onclick="Dronigest.Cinegetico.mostrarTab('especies')">
+                            <i class="fas fa-paw"></i> Especies
+                        </button>
+                        <button class="tab" onclick="Dronigest.Cinegetico.mostrarTab('estadisticas')">
+                            <i class="fas fa-chart-bar"></i> Estadísticas
+                        </button>
+                    </div>
+                    <div id="tabCinegRegistros" class="tab-content active">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="fas fa-crosshairs"></i> Registros de Control Cinegético</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="listaCinegetico" class="table-container">
+                                    <p class="empty-state">No hay registros de control cinegético</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tabCinegZonas" class="tab-content">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="fas fa-map"></i> Zonas Cinegéticas</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="listaZonasCineg" class="table-container">
+                                    <p class="empty-state">No hay zonas cinegéticas registradas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tabCinegEspecies" class="tab-content">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="fas fa-paw"></i> Especies Monitorizadas</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="listaEspeciesCineg" class="table-container">
+                                    <p class="empty-state">No hay especies registradas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tabCinegEstadisticas" class="tab-content">
+                        <div class="dashboard-grid" style="margin-bottom:1rem;">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background:linear-gradient(135deg,#E65100,#BF360C);"><i class="fas fa-crosshairs"></i></div>
+                                <div class="stat-info">
+                                    <h3 id="cinegTotalRegistros">0</h3>
+                                    <p>Total registros</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background:linear-gradient(135deg,#2E7D32,#1B5E20);"><i class="fas fa-paw"></i></div>
+                                <div class="stat-info">
+                                    <h3 id="cinegTotalEspecies">0</h3>
+                                    <p>Especies detectadas</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background:linear-gradient(135deg,#1565C0,#0D47A1);"><i class="fas fa-map"></i></div>
+                                <div class="stat-info">
+                                    <h3 id="cinegTotalZonas">0</h3>
+                                    <p>Zonas activas</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background:linear-gradient(135deg,#6A1B9A,#4A148C);"><i class="fas fa-binoculars"></i></div>
+                                <div class="stat-info">
+                                    <h3 id="cinegTotalAvistamientos">0</h3>
+                                    <p>Avistamientos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h2><i class="fas fa-chart-bar"></i> Resumen por Especie</h2>
+                            </div>
+                            <div class="card-body">
+                                <div id="cinegEstadisticasEspecies" class="table-container">
+                                    <p class="empty-state">Sin datos para estadísticas</p>
+                                </div>
                             </div>
                         </div>
                     </div>

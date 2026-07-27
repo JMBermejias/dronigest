@@ -114,6 +114,7 @@ Dronigest.DB = {
             vuelos: [], pilotos: [], auxiliares: [], tiposVuelo: [],
             categorias: [], drones: [], modelos: [], accesorios: [],
             trabajos: [], inspecciones: [], agricola: [], checklists: [],
+            cinegetico: [], zonasCineg: [], especiesCineg: [],
             actividad: []
         };
         Object.keys(defaults).forEach(k => {
@@ -171,6 +172,7 @@ Dronigest.Navigation = {
         checklists: 'Checklists de Vuelo', equipos: 'Equipos y Drones',
         trabajos: 'Trabajos Realizados', inspecciones: 'Inspecciones',
         agricola: 'Trabajos Agricolas', meteorologia: 'Meteorologia (AEMET)',
+        cinegetico: 'Control Cinegetico',
         comunicacion: 'Comunicar Vuelo - Ministerio del Interior'
     },
 
@@ -358,6 +360,8 @@ Dronigest.Dashboard = {
         document.getElementById('statPilotos').textContent = Dronigest.DB.get('pilotos').length;
         document.getElementById('statDrones').textContent = Dronigest.DB.get('drones').length;
         document.getElementById('statTrabajos').textContent = Dronigest.DB.get('trabajos').length;
+        const cinegEl = document.getElementById('statCinegetico');
+        if (cinegEl) cinegEl.textContent = Dronigest.DB.get('cinegetico').length;
 
         const vuelos = Dronigest.DB.get('vuelos').sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 5);
         const container = document.getElementById('proximosVuelos');
@@ -1701,6 +1705,359 @@ Dronigest.Agricola = {
     }
 };
 
+/* ===== CONTROL CINEGETICO ===== */
+Dronigest.Cinegetico = {
+    mostrarTab(tab) {
+        document.querySelectorAll('#page-cinegetico .tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('#page-cinegetico .tab-content').forEach(t => t.classList.remove('active'));
+        event.target.closest('.tab').classList.add('active');
+        const tabMap = {
+            registros: 'tabCinegRegistros',
+            zonas: 'tabCinegZonas',
+            especies: 'tabCinegEspecies',
+            estadisticas: 'tabCinegEstadisticas'
+        };
+        document.getElementById(tabMap[tab]).classList.add('active');
+        if (tab === 'estadisticas') this.actualizarEstadisticas();
+    },
+
+    nuevo() {
+        const zonas = Dronigest.DB.get('zonasCineg');
+        const especies = Dronigest.DB.get('especiesCineg');
+        const body = `
+            <div class="form-group"><label>Nombre / Referencia del registro</label><input type="text" id="cgNombre" class="form-control" placeholder="Ej: Vuelo control jabalies zona norte"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Tipo de control</label>
+                    <select id="cgTipo" class="form-control">
+                        <option value="avistamiento">Avistamiento de fauna</option>
+                        <option value="censo_poblacion">Censo de poblacion</option>
+                        <option value="control_plagas">Control de plagas</option>
+                        <option value="vigilancia_caza">Vigilancia anti-presencia ilegal</option>
+                        <option value="seguimiento_heridos">Seguimiento de animales heridos</option>
+                        <option value="monitoreo_habitat">Monitoreo de habitat</option>
+                        <option value="control_cierres">Control de cierres/vallados</option>
+                        <option value="conteo_reproduccion">Conteo de reproduccion</option>
+                        <option value="otro_cg">Otro</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Zona cinegetica</label>
+                    <select id="cgZona" class="form-control">
+                        <option value="">Seleccionar zona</option>
+                        ${zonas.map(z => `<option value="${z.nombre}">${z.nombre}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Fecha</label><input type="date" id="cgFecha" class="form-control" value="${new Date().toISOString().split('T')[0]}"></div>
+                <div class="form-group"><label>Hora inicio</label><input type="time" id="cgHora" class="form-control" value="${new Date().toTimeString().slice(0,5)}"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Piloto</label>
+                    <select id="cgPiloto" class="form-control">
+                        <option value="">Seleccionar piloto</option>
+                        ${Dronigest.DB.get('pilotos').map(p => `<option value="${p.nombre}">${p.nombre}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group"><label>Drone utilizado</label>
+                    <select id="cgDrone" class="form-control">
+                        <option value="">Seleccionar drone</option>
+                        ${Dronigest.DB.get('drones').map(d => `<option value="${d.nombre}">${d.nombre}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Especie detectada</label>
+                    <select id="cgEspecie" class="form-control">
+                        <option value="">Sin especie concreta</option>
+                        ${especies.map(e => `<option value="${e.nombre}">${e.nombre} (${e.nombreCientifico || ''})</option>`).join('')}
+                        <option value="jabali">Jabalí</option>
+                        <option value="ciervo">Ciervo</option>
+                        <option value="corzo">Corzo</option>
+                        <option value="gamuza">Gamuza</option>
+                        <option value="conejo">Conejo</option>
+                        <option value="liebre">Liebre</option>
+                        <option value="perdiz">Perdiz</option>
+                        <option value="avifauna">Avifauna</option>
+                        <option value="otro_animal">Otro animal</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Nº de individuos</label><input type="number" id="cgIndividuos" class="form-control" value="1" min="0"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Latitud</label><input type="number" step="any" id="cgLat" class="form-control" value="${(Dronigest.userLocation||{}).lat || ''}"></div>
+                <div class="form-group"><label>Longitud</label><input type="number" step="any" id="cgLng" class="form-control" value="${(Dronigest.userLocation||{}).lng || ''}"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Estado del animal</label>
+                    <select id="cgEstadoAnimal" class="form-control">
+                        <option value="saludable">Saludable</option>
+                        <option value="herido">Herido</option>
+                        <option value="enfermo">Enfermo</option>
+                        <option value="muerto">Muerto</option>
+                        <option value="desconocido">Desconocido</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Amenaza detectada</label>
+                    <select id="cgAmenaza" class="form-control">
+                        <option value="ninguna">Ninguna</option>
+                        <option value="voraceras">Voraceras / Trampas</option>
+                        <option value="cerco_ilegal">Cercado ilegal</option>
+                        <option value="presencia_personas">Presencia sospechosa</option>
+                        <option value="incendio">Riesgo de incendio</option>
+                        <option value="daño_cultivos">Dano en cultivos</option>
+                        <option value="otra_amenaza">Otra amenaza</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group"><label>Observaciones</label><textarea id="cgObs" class="form-control" placeholder="Detalle de las observaciones: comportamiento, habitat, condiciones..."></textarea></div>
+        `;
+        Dronigest.Modal.show('<i class="fas fa-crosshairs"></i> Nuevo Registro de Control', body, `
+            <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+            <button class="btn-primary" onclick="Dronigest.Cinegetico.guardar()"><i class="fas fa-save"></i> Guardar</button>
+        `);
+    },
+
+    guardar() {
+        const data = {
+            nombre: document.getElementById('cgNombre').value,
+            tipo: document.getElementById('cgTipo').value,
+            zona: document.getElementById('cgZona').value,
+            fecha: document.getElementById('cgFecha').value,
+            hora: document.getElementById('cgHora').value,
+            piloto: document.getElementById('cgPiloto').value,
+            drone: document.getElementById('cgDrone').value,
+            especie: document.getElementById('cgEspecie').value,
+            individuos: parseInt(document.getElementById('cgIndividuos').value) || 0,
+            lat: parseFloat(document.getElementById('cgLat').value) || null,
+            lng: parseFloat(document.getElementById('cgLng').value) || null,
+            estadoAnimal: document.getElementById('cgEstadoAnimal').value,
+            amenaza: document.getElementById('cgAmenaza').value,
+            observaciones: document.getElementById('cgObs').value
+        };
+        if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre para el registro', 'warning'); return; }
+        Dronigest.DB.add('cinegetico', data);
+        Dronigest.Toast.show('Registro de control cinegetico guardado', 'success');
+        Dronigest.DB.logActividad('cinegetico', 'Control cinegetico registrado', data.nombre);
+        Dronigest.Modal.cerrar();
+        this.listar();
+        Dronigest.Dashboard.actualizar();
+    },
+
+    eliminar(id) {
+        if (confirm('¿Eliminar este registro?')) {
+            Dronigest.DB.remove('cinegetico', id);
+            Dronigest.Toast.show('Registro eliminado', 'info');
+            this.listar();
+            Dronigest.Dashboard.actualizar();
+        }
+    },
+
+    nuevaZona() {
+        const body = `
+            <div class="form-group"><label>Nombre de la zona</label><input type="text" id="zcNombre" class="form-control" placeholder="Ej: Monte Norte - Coto La Dehesa"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Superficie (ha)</label><input type="number" step="0.01" id="zcSuperficie" class="form-control" placeholder="Hectareas"></div>
+                <div class="form-group"><label>Tipo de terreno</label>
+                    <select id="zcTerreno" class="form-control">
+                        <option value="monte">Monte</option>
+                        <option value="dehesa">Dehesa</option>
+                        <option value="campo_abierto">Campo abierto</option>
+                        <option value="ribera">Ribera</option>
+                        <option value="montana">Montana</option>
+                        <option value="misto">Misto</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Especies principales</label><input type="text" id="zcEspecies" class="form-control" placeholder="Ej: Jabali, Ciervo, Perdiz"></div>
+                <div class="form-group"><label>Estado</label>
+                    <select id="zcEstado" class="form-control">
+                        <option value="activa">Activa</option>
+                        <option value="inactiva">Inactiva</option>
+                        <option value="protegida">Protegida</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group"><label>Propietario / Gestor</label><input type="text" id="zcPropietario" class="form-control" placeholder="Nombre del propietario o gestor"></div>
+            <div class="form-group"><label>Restricciones de acceso</label><textarea id="zcRestricciones" class="form-control" placeholder="Acceso, permisos necesarios, horarios..."></textarea></div>
+            <div class="form-group"><label>Notas</label><textarea id="zcNotas" class="form-control" placeholder="Observaciones sobre la zona..."></textarea></div>
+        `;
+        Dronigest.Modal.show('<i class="fas fa-map"></i> Nueva Zona Cinegetica', body, `
+            <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+            <button class="btn-primary" onclick="Dronigest.Cinegetico.guardarZona()"><i class="fas fa-save"></i> Guardar</button>
+        `);
+    },
+
+    guardarZona() {
+        const data = {
+            nombre: document.getElementById('zcNombre').value,
+            superficie: parseFloat(document.getElementById('zcSuperficie').value) || 0,
+            terreno: document.getElementById('zcTerreno').value,
+            especies: document.getElementById('zcEspecies').value,
+            estado: document.getElementById('zcEstado').value,
+            propietario: document.getElementById('zcPropietario').value,
+            restricciones: document.getElementById('zcRestricciones').value,
+            notas: document.getElementById('zcNotas').value
+        };
+        if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre para la zona', 'warning'); return; }
+        Dronigest.DB.add('zonasCineg', data);
+        Dronigest.Toast.show('Zona cinegetica registrada', 'success');
+        Dronigest.Modal.cerrar();
+        this.listarZonas();
+    },
+
+    eliminarZona(id) {
+        if (confirm('¿Eliminar esta zona cinegetica?')) {
+            Dronigest.DB.remove('zonasCineg', id);
+            Dronigest.Toast.show('Zona eliminada', 'info');
+            this.listarZonas();
+        }
+    },
+
+    listar() {
+        const registros = Dronigest.DB.get('cinegetico').sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        const container = document.getElementById('listaCinegetico');
+        const tipoLabels = {
+            avistamiento: 'Avistamiento', censo_poblacion: 'Censo', control_plagas: 'Control plagas',
+            vigilancia_caza: 'Vigilancia', seguimiento_heridos: 'Seguimiento heridos',
+            monitoreo_habitat: 'Monitoreo habitat', control_cierres: 'Control cierres',
+            conteo_reproduccion: 'Conteo reproduccion', otro_cg: 'Otro'
+        };
+        const amenazaLabels = {
+            ninguna: '-', voraceras: 'Voraceras', cerco_ilegal: 'Cercado ilegal',
+            presencia_personas: 'Personas sospechosas', incendio: 'Incendio',
+            daño_cultivos: 'Dano cultivos', otra_amenaza: 'Otra'
+        };
+        if (registros.length === 0) {
+            container.innerHTML = '<p class="empty-state">No hay registros de control cinegetico</p>';
+            return;
+        }
+        container.innerHTML = `
+            <table class="data-table">
+                <thead><tr><th>Nombre</th><th>Tipo</th><th>Fecha</th><th>Especie</th><th>Nº</th><th>Zona</th><th>Amenaza</th><th>Acciones</th></tr></thead>
+                <tbody>
+                    ${registros.map(r => `
+                        <tr>
+                            <td><strong>${r.nombre}</strong></td>
+                            <td><span class="badge badge-info">${tipoLabels[r.tipo] || r.tipo}</span></td>
+                            <td>${Dronigest.Utils.formatDate(r.fecha)} ${r.hora || ''}</td>
+                            <td><span class="badge badge-success">${r.especie || '-'}</span></td>
+                            <td><strong>${r.individuos || 0}</strong></td>
+                            <td>${r.zona || '-'}</td>
+                            <td>${r.amenaza && r.amenaza !== 'ninguna' ? `<span class="badge badge-danger">${amenazaLabels[r.amenaza] || r.amenaza}</span>` : '-'}</td>
+                            <td class="actions">
+                                <button class="btn-action delete" onclick="Dronigest.Cinegetico.eliminar('${r.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+    },
+
+    listarZonas() {
+        const zonas = Dronigest.DB.get('zonasCineg');
+        const container = document.getElementById('listaZonasCineg');
+        if (zonas.length === 0) {
+            container.innerHTML = '<p class="empty-state">No hay zonas cinegeticas registradas</p>';
+            return;
+        }
+        container.innerHTML = `
+            <table class="data-table">
+                <thead><tr><th>Nombre</th><th>Superficie</th><th>Terreno</th><th>Especies</th><th>Estado</th><th>Propietario</th><th>Acciones</th></tr></thead>
+                <tbody>
+                    ${zonas.map(z => `
+                        <tr>
+                            <td><strong>${z.nombre}</strong></td>
+                            <td>${z.superficie ? z.superficie + ' ha' : '-'}</td>
+                            <td><span class="badge badge-info">${z.terreno || '-'}</span></td>
+                            <td>${z.especies || '-'}</td>
+                            <td><span class="badge badge-${z.estado === 'activa' ? 'success' : z.estado === 'protegida' ? 'warning' : 'info'}">${z.estado || '-'}</span></td>
+                            <td>${z.propietario || '-'}</td>
+                            <td class="actions">
+                                <button class="btn-action delete" onclick="Dronigest.Cinegetico.eliminarZona('${z.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+    },
+
+    listarEspecies() {
+        const especies = Dronigest.DB.get('especiesCineg');
+        const container = document.getElementById('listaEspeciesCineg');
+        if (especies.length === 0) {
+            container.innerHTML = '<p class="empty-state">No hay especies registradas</p>';
+            return;
+        }
+        container.innerHTML = `
+            <table class="data-table">
+                <thead><tr><th>Nombre</th><th>Nombre Cientifico</th><th>Familia</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                    ${especies.map(e => `
+                        <tr>
+                            <td><strong>${e.nombre}</strong></td>
+                            <td><em>${e.nombreCientifico || '-'}</em></td>
+                            <td>${e.familia || '-'}</td>
+                            <td><span class="badge badge-${e.estado === 'comun' ? 'success' : e.estado === 'protegida' ? 'danger' : 'warning'}">${e.estado || '-'}</span></td>
+                            <td class="actions">
+                                <button class="btn-action delete" onclick="Dronigest.Cinegetico.eliminarEspecie('${e.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+    },
+
+    eliminarEspecie(id) {
+        if (confirm('¿Eliminar esta especie?')) {
+            Dronigest.DB.remove('especiesCineg', id);
+            Dronigest.Toast.show('Especie eliminada', 'info');
+            this.listarEspecies();
+        }
+    },
+
+    actualizarEstadisticas() {
+        const registros = Dronigest.DB.get('cinegetico');
+        const especies = Dronigest.DB.get('especiesCineg');
+        const zonas = Dronigest.DB.get('zonasCineg');
+
+        document.getElementById('cinegTotalRegistros').textContent = registros.length;
+        document.getElementById('cinegTotalEspecies').textContent = especies.length;
+        document.getElementById('cinegTotalZonas').textContent = zonas.length;
+        document.getElementById('cinegTotalAvistamientos').textContent = registros.filter(r => r.tipo === 'avistamiento').length;
+
+        const conteo = {};
+        registros.forEach(r => {
+            const sp = r.especie || 'Desconocida';
+            if (!conteo[sp]) conteo[sp] = { total: 0, individuos: 0, amenazas: 0 };
+            conteo[sp].total++;
+            conteo[sp].individuos += r.individuos || 0;
+            if (r.amenaza && r.amenaza !== 'ninguna') conteo[sp].amenazas++;
+        });
+
+        const container = document.getElementById('cinegEstadisticasEspecies');
+        const entries = Object.entries(conteo).sort((a, b) => b[1].individuos - a[1].individuos);
+        if (entries.length === 0) {
+            container.innerHTML = '<p class="empty-state">Sin datos para estadisticas</p>';
+            return;
+        }
+        container.innerHTML = `
+            <table class="data-table">
+                <thead><tr><th>Especie</th><th>Registros</th><th>Total individuos</th><th>Amenazas detectadas</th></tr></thead>
+                <tbody>
+                    ${entries.map(([sp, d]) => `
+                        <tr>
+                            <td><strong>${sp}</strong></td>
+                            <td>${d.total}</td>
+                            <td><strong>${d.individuos}</strong></td>
+                            <td>${d.amenazas > 0 ? `<span style="color:var(--danger);font-weight:700;">${d.amenazas}</span>` : '0'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+    }
+};
+
 /* ===== METEOROLOGÍA ===== */
 Dronigest.Meteo = {
     init() {
@@ -1922,4 +2279,7 @@ document.addEventListener('DOMContentLoaded', () => {
     Dronigest.Trabajos.listar();
     Dronigest.Inspecciones.listar();
     Dronigest.Agricola.listar();
+    Dronigest.Cinegetico.listar();
+    Dronigest.Cinegetico.listarZonas();
+    Dronigest.Cinegetico.listarEspecies();
 });
