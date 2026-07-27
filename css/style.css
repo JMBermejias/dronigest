@@ -612,6 +612,18 @@ textarea.form-control {
     background: var(--primary-bg);
 }
 
+.row-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
 .data-table .actions {
     display: flex;
     gap: 6px;

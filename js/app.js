@@ -778,7 +778,7 @@ Dronigest.Pilotos = {
                 <tbody>
                     ${pilotos.map(p => `
                         <tr>
-                            <td><strong>${p.nombre}</strong></td>
+                            <td><span class="row-icon" style="background:#E3F2FD;color:#0288D1;"><i class="fas fa-user-tie"></i></span> <strong>${p.nombre}</strong></td>
                             <td>${p.nif || '-'}</td>
                             <td>${p.certificacion || '-'}</td>
                             <td><span class="badge badge-info">${p.categoria || '-'}</span></td>
@@ -805,7 +805,7 @@ Dronigest.Pilotos = {
                 <tbody>
                     ${auxiliares.map(a => `
                         <tr>
-                            <td><strong>${a.nombre}</strong></td>
+                            <td><span class="row-icon" style="background:#E8F5E9;color:#2E7D32;"><i class="fas fa-user-friends"></i></span> <strong>${a.nombre}</strong></td>
                             <td>${a.nif || '-'}</td>
                             <td><span class="badge badge-info">${a.funcion || '-'}</span></td>
                             <td>${a.telefono || '-'}</td>
@@ -1236,7 +1236,7 @@ Dronigest.Equipos = {
                 <tbody>
                     ${drones.map(d => `
                         <tr>
-                            <td><strong>${d.nombre}</strong></td>
+                            <td><span class="row-icon" style="background:#E1F5FE;color:#01579B;"><i class="fas fa-helicopter"></i></span> <strong>${d.nombre}</strong></td>
                             <td>${d.modelo || '-'}</td>
                             <td>${d.serie || '-'}</td>
                             <td>${d.horasVuelo || 0}h</td>
@@ -1263,7 +1263,7 @@ Dronigest.Equipos = {
                 <tbody>
                     ${modelos.map(m => `
                         <tr>
-                            <td><strong>${m.nombre}</strong></td>
+                            <td><span class="row-icon" style="background:#FFF3E0;color:#E65100;"><i class="fas fa-th-large"></i></span> <strong>${m.nombre}</strong></td>
                             <td>${m.marca || '-'}</td>
                             <td><span class="badge badge-info">${m.tipo || '-'}</span></td>
                             <td>${m.peso ? m.peso + 'g' : '-'}</td>
@@ -1291,7 +1291,7 @@ Dronigest.Equipos = {
                 <tbody>
                     ${acc.map(a => `
                         <tr>
-                            <td><strong>${a.nombre}</strong></td>
+                            <td><span class="row-icon" style="background:#F3E5F5;color:#7B1FA2;"><i class="fas fa-puzzle-piece"></i></span> <strong>${a.nombre}</strong></td>
                             <td>${a.marca || '-'}</td>
                             <td>${a.compatible || '-'}</td>
                             <td>${a.cantidad || 1}</td>
