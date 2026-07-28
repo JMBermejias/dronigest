@@ -112,13 +112,21 @@ Dronigest.DB = {
             categorias: [], drones: [], modelos: [], accesorios: [],
             trabajos: [], inspecciones: [], agricola: [], checklists: [],
             cinegetico: [], zonasCineg: [], especiesCineg: [],
-            actividad: []
+            actividad: [], categoriasAesa: []
         };
         Object.keys(defaults).forEach(k => {
             if (!localStorage.getItem('dronigest_' + k)) {
                 localStorage.setItem('dronigest_' + k, JSON.stringify(defaults[k]));
             }
         });
+        if (this.get('categoriasAesa').length === 0) {
+            const now = Date.now().toString(36);
+            this.set('categoriasAesa', [
+                { id: now + 'a', nombre: 'A1-A3', descripcion: 'Categoría abierta A1-A3' },
+                { id: now + 'b', nombre: 'A2', descripcion: 'Categoría abierta A2' },
+                { id: now + 'c', nombre: 'STS', descripcion: 'STS Categoría específica' }
+            ]);
+        }
     },
     get(key) {
         try { return JSON.parse(localStorage.getItem('dronigest_' + key)) || []; }
@@ -170,7 +178,8 @@ Dronigest.Navigation = {
         trabajos: 'Trabajos Realizados', inspecciones: 'Inspecciones',
         agricola: 'Trabajos Agricolas', meteorologia: 'Meteorologia (AEMET)',
         cinegetico: 'Control Cinegetico',
-        comunicacion: 'Comunicar Vuelo - Ministerio del Interior'
+        comunicacion: 'Comunicar Vuelo - Ministerio del Interior',
+        categoriasAesa: 'Categorías AESA'
     },
 
     init() {
@@ -214,6 +223,7 @@ Dronigest.Navigation = {
         document.getElementById('sidebar').classList.remove('mobile-open');
 
         if (page === 'meteorologia') Dronigest.Meteo.obtenerMeteorologia();
+        if (page === 'categoriasAesa') Dronigest.CategoriasAesa.listar();
     }
 };
 
@@ -584,6 +594,7 @@ Dronigest.Pilotos = {
     },
 
     nuevoPiloto() {
+        const cats = Dronigest.DB.get('categoriasAesa');
         const body = `
             <div class="form-group"><label>Nombre completo</label><input type="text" id="pNombre" class="form-control" placeholder="Nombre del piloto"></div>
             <div class="form-row">
@@ -597,11 +608,8 @@ Dronigest.Pilotos = {
             <div class="form-row">
                 <div class="form-group"><label>Categoría</label>
                     <select id="pCategoria" class="form-control">
-                        <option value="A1">A1</option>
-                        <option value="A2">A2</option>
-                        <option value="A3">A3</option>
-                        <option value="STS-01">STS-01</option>
-                        <option value="STS-02">STS-02</option>
+                        <option value="">Seleccionar categoría</option>
+                        ${cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('')}
                     </select>
                 </div>
                 <div class="form-group"><label>Cobertura Seguro</label><input type="text" id="pSeguro" class="form-control" placeholder="Nº póliza"></div>
@@ -1158,6 +1166,7 @@ Dronigest.Equipos = {
     },
 
     nuevoModelo() {
+        const cats = Dronigest.DB.get('categoriasAesa');
         const body = `
             <div class="form-group"><label>Nombre del modelo</label><input type="text" id="mNombre" class="form-control" placeholder="Ej: Matrice 30T"></div>
             <div class="form-row">
@@ -1179,12 +1188,8 @@ Dronigest.Equipos = {
                 <div class="form-group"><label>Carga máx. (g)</label><input type="number" id="mCarga" class="form-control" placeholder="g"></div>
                 <div class="form-group"><label>Categoría AESA</label>
                     <select id="mCategoria" class="form-control">
-                        <option value="A1">A1</option>
-                        <option value="A2">A2</option>
-                        <option value="A3">A3</option>
-                        <option value="Open">Open</option>
-                        <option value="Specific">Specific</option>
-                        <option value="Certified">Certified</option>
+                        <option value="">Seleccionar categoría</option>
+                        ${cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('')}
                     </select>
                 </div>
             </div>
@@ -2586,6 +2591,84 @@ Dronigest.Meteo = {
     }
 };
 
+/* ===== CATEGORÍAS AESA ===== */
+Dronigest.CategoriasAesa = {
+    nueva() {
+        const body = `
+            <div class="form-group"><label>Nombre</label><input type="text" id="caNombre" class="form-control" placeholder="Ej: A1-A3"></div>
+            <div class="form-group"><label>Descripción</label><textarea id="caDesc" class="form-control" placeholder="Descripción de la categoría..."></textarea></div>
+        `;
+        Dronigest.Modal.show('<i class="fas fa-plus"></i> Nueva Categoría AESA', body, `
+            <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+            <button class="btn-primary" onclick="Dronigest.CategoriasAesa.guardar()"><i class="fas fa-save"></i> Guardar</button>
+        `);
+    },
+
+    guardar(id) {
+        const data = {
+            nombre: document.getElementById('caNombre').value,
+            descripcion: document.getElementById('caDesc').value
+        };
+        if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre', 'warning'); return; }
+        if (id) {
+            Dronigest.DB.update('categoriasAesa', id, data);
+            Dronigest.Toast.show('Categoría actualizada', 'success');
+        } else {
+            Dronigest.DB.add('categoriasAesa', data);
+            Dronigest.Toast.show('Categoría registrada', 'success');
+        }
+        Dronigest.Modal.cerrar();
+        this.listar();
+    },
+
+    editar(id) {
+        const c = Dronigest.DB.find('categoriasAesa', id);
+        if (!c) return;
+        this.nueva();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Categoría AESA';
+            document.getElementById('caNombre').value = c.nombre || '';
+            document.getElementById('caDesc').value = c.descripcion || '';
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.CategoriasAesa.guardar('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
+    },
+
+    eliminar(id) {
+        if (confirm('¿Eliminar esta categoría AESA?')) {
+            Dronigest.DB.remove('categoriasAesa', id);
+            Dronigest.Toast.show('Categoría eliminada', 'info');
+            this.listar();
+        }
+    },
+
+    listar() {
+        const cats = Dronigest.DB.get('categoriasAesa');
+        const container = document.getElementById('listaCategoriasAesa');
+        if (cats.length === 0) {
+            container.innerHTML = '<p class="empty-state">No hay categorías AESA registradas</p>';
+            return;
+        }
+        container.innerHTML = `
+            <table class="data-table">
+                <thead><tr><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr></thead>
+                <tbody>
+                    ${cats.map(c => `
+                        <tr>
+                            <td data-label="Nombre"><strong>${c.nombre}</strong></td>
+                            <td data-label="Descripción">${c.descripcion || '-'}</td>
+                            <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.CategoriasAesa.editar('${c.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+                                <button class="btn-action delete" onclick="Dronigest.CategoriasAesa.eliminar('${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+    }
+};
+
 /* ===== INIT ===== */
 document.addEventListener('DOMContentLoaded', () => {
     Dronigest.init();
@@ -2603,4 +2686,5 @@ document.addEventListener('DOMContentLoaded', () => {
     Dronigest.Cinegetico.listar();
     Dronigest.Cinegetico.listarZonas();
     Dronigest.Cinegetico.listarEspecies();
+    Dronigest.CategoriasAesa.listar();
 });
