@@ -309,32 +309,42 @@ Dronigest.Mapa = {
             attribution: '&copy; IGN TN', maxZoom: 19
         });
 
-        const enaireDronesLayer = L.ImageOverlay.extend({
-            onAdd(map) {
-                L.ImageOverlay.prototype.onAdd.call(this, map);
-                this._map = map;
-                this._map.on('moveend zoomend resize', this._update, this);
-                this._update();
-            },
-            onRemove(map) {
-                map.off('moveend zoomend resize', this._update, this);
-                L.ImageOverlay.prototype.onRemove.call(this, this);
-            },
-            _update() {
-                if (!this._map) return;
-                const b = this._map.getBounds();
-                const s = this._map.getSize();
-                const bbox = `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`;
-                const url = `https://servais.enaire.es/insignia/rest/services/NSF_SRV/SRV_UAS_ZG_V1/MapServer/export?dpi=96&transparent=true&format=png32&layers=show:0,2,3&bbox=${bbox}&bboxSR=4326&imageSR=4326&size=${s.x},${s.y}&f=image`;
-                this.setUrl(url);
-                this.setBounds(b);
-            }
-        });
+        const enaireDronesUrl = 'https://servais.enaire.es/insignia/rest/services/NSF_SRV/SRV_UAS_ZG_V1/MapServer/export';
 
-        const enaireDrones = new enaireDronesLayer(null, {
-            attribution: '&copy; ENAIRE - Zonas UAS',
-            opacity: 0.7
-        });
+        const enaireDrones = L.layerGroup();
+        enaireDrones._enaireOverlay = null;
+        enaireDrones._enaireUpdating = false;
+
+        enaireDrones.onAdd = function(map) {
+            L.LayerGroup.prototype.onAdd.call(this, map);
+            this._map = map;
+            this._updateEnaire();
+            map.on('moveend zoomend resize', this._updateEnaire, this);
+        };
+
+        enaireDrones.onRemove = function(map) {
+            map.off('moveend zoomend resize', this._updateEnaire, this);
+            if (this._enaireOverlay) {
+                map.removeLayer(this._enaireOverlay);
+                this._enaireOverlay = null;
+            }
+            L.LayerGroup.prototype.onRemove.call(this, map);
+        };
+
+        enaireDrones._updateEnaire = function() {
+            if (!this._map || this._enaireUpdating) return;
+            this._enaireUpdating = true;
+            const map = this._map;
+            const b = map.getBounds();
+            const s = map.getSize();
+            const bbox = `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`;
+            const url = `${enaireDronesUrl}?dpi=96&transparent=true&format=png32&layers=show:0,2,3&bbox=${bbox}&bboxSR=4326&imageSR=4326&size=${s.x},${s.y}&f=image&${Date.now()}`;
+            if (this._enaireOverlay) map.removeLayer(this._enaireOverlay);
+            this._enaireOverlay = L.imageOverlay(url, b, { opacity: 0.75, crossOrigin: true });
+            this._enaireOverlay.addTo(map);
+            this._enaireOverlay.on('load', () => { this._enaireUpdating = false; });
+            setTimeout(() => { this._enaireUpdating = false; }, 3000);
+        };
 
         const baseMaps = {
             'OpenStreetMap': osmLayer,
