@@ -309,55 +309,14 @@ Dronigest.Mapa = {
             attribution: '&copy; IGN TN', maxZoom: 19
         });
 
-        const enaireDronesUrl = 'https://servais.enaire.es/insignia/rest/services/NSF_SRV/SRV_UAS_ZG_V1/MapServer/export';
-
-        const enaireDrones = L.layerGroup();
-        enaireDrones._enaireOverlay = null;
-        enaireDrones._enaireUpdating = false;
-
-        enaireDrones.onAdd = function(map) {
-            L.LayerGroup.prototype.onAdd.call(this, map);
-            this._map = map;
-            this._updateEnaire();
-            map.on('moveend zoomend resize', this._updateEnaire, this);
-        };
-
-        enaireDrones.onRemove = function(map) {
-            map.off('moveend zoomend resize', this._updateEnaire, this);
-            if (this._enaireOverlay) {
-                map.removeLayer(this._enaireOverlay);
-                this._enaireOverlay = null;
-            }
-            L.LayerGroup.prototype.onRemove.call(this, map);
-        };
-
-        enaireDrones._updateEnaire = function() {
-            if (!this._map || this._enaireUpdating) return;
-            this._enaireUpdating = true;
-            const map = this._map;
-            const b = map.getBounds();
-            const s = map.getSize();
-            const bbox = `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`;
-            const url = `${enaireDronesUrl}?dpi=96&transparent=true&format=png32&layers=show:0,2,3&bbox=${bbox}&bboxSR=4326&imageSR=4326&size=${s.x},${s.y}&f=image&${Date.now()}`;
-            if (this._enaireOverlay) map.removeLayer(this._enaireOverlay);
-            this._enaireOverlay = L.imageOverlay(url, b, { opacity: 0.75, crossOrigin: true });
-            this._enaireOverlay.addTo(map);
-            this._enaireOverlay.on('load', () => { this._enaireUpdating = false; });
-            setTimeout(() => { this._enaireUpdating = false; }, 3000);
-        };
-
         const baseMaps = {
             'OpenStreetMap': osmLayer,
             'IGN Base': enaireBase,
             'IGN TN': enaireTN
         };
 
-        const overlayMaps = {
-            'ENAIRE Drones (Zonas UAS)': enaireDrones
-        };
-
         osmLayer.addTo(Dronigest.map);
-        L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(Dronigest.map);
+        L.control.layers(baseMaps, null, { collapsed: true }).addTo(Dronigest.map);
 
         L.control.scale({ imperial: false }).addTo(Dronigest.map);
 
