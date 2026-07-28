@@ -305,14 +305,45 @@ Dronigest.Mapa = {
             attribution: '&copy; IGN TN', maxZoom: 19
         });
 
+        const enaireDronesLayer = L.ImageOverlay.extend({
+            onAdd(map) {
+                L.ImageOverlay.prototype.onAdd.call(this, map);
+                this._map = map;
+                this._map.on('moveend zoomend resize', this._update, this);
+                this._update();
+            },
+            onRemove(map) {
+                map.off('moveend zoomend resize', this._update, this);
+                L.ImageOverlay.prototype.onRemove.call(this, this);
+            },
+            _update() {
+                if (!this._map) return;
+                const b = this._map.getBounds();
+                const s = this._map.getSize();
+                const bbox = `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`;
+                const url = `https://servais.enaire.es/insignias/rest/services/NSF/Drones_ZG_Aero_V2_2/MapServer/export?dpi=96&transparent=true&format=png32&layers=show:0,1,2,3,4,5,6,7,8,9,10,11&bbox=${bbox}&bboxSR=4326&imageSR=4326&size=${s.x},${s.y}&f=image`;
+                this.setUrl(url);
+                this.setBounds(b);
+            }
+        });
+
+        const enaireDrones = new enaireDronesLayer(null, {
+            attribution: '&copy; ENAIRE - Zonas UAS',
+            opacity: 0.7
+        });
+
         const baseMaps = {
             'OpenStreetMap': osmLayer,
             'IGN Base': enaireBase,
             'IGN TN': enaireTN
         };
 
+        const overlayMaps = {
+            'ENAIRE Drones (Zonas UAS)': enaireDrones
+        };
+
         osmLayer.addTo(Dronigest.map);
-        L.control.layers(baseMaps, null, { collapsed: true }).addTo(Dronigest.map);
+        L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(Dronigest.map);
 
         L.control.scale({ imperial: false }).addTo(Dronigest.map);
 
