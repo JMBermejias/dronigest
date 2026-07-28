@@ -1710,20 +1710,25 @@ Dronigest.Inspecciones = {
                 <table class="data-table">
                     <thead><tr><th>Nombre</th><th>Fecha</th><th>Cliente</th><th>Piloto</th><th>Elementos</th><th>Anomalías</th><th>Acciones</th></tr></thead>
                     <tbody>
-                        ${items.map(i => `
-                            <tr>
-                                <td data-label="Nombre"><strong>${i.nombre}</strong><br><small class="badge badge-${tipoBadge[tipoKey] || 'info'}">${i.subtipo || tipoLabels[tipoKey]}</small></td>
-                                <td data-label="Fecha">${Dronigest.Utils.formatDate(i.fecha)}</td>
-                                <td data-label="Cliente">${i.cliente || '-'}</td>
-                                <td data-label="Piloto">${i.piloto || '-'}</td>
-                                <td data-label="Elementos">${i.numElementos || 0}</td>
-                                <td data-label="Anomalías">${i.numAnomalias > 0 ? `<span style="color:var(--danger);font-weight:700;">${i.numAnomalias}</span>` : '0'}</td>
-                                <td class="actions">
-                                    <button class="btn-action edit" onclick="Dronigest.Inspecciones.editar('${i.id}')" title="Editar"><i class="fas fa-edit"></i></button>
-                                    <button class="btn-action delete" onclick="Dronigest.Inspecciones.eliminar('${i.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
-                                </td>
-                            </tr>
-                        `).join('')}
+                    ${items.map(i => `
+                        <tr class="${i.completado ? 'row-completed' : ''}">
+                            <td data-label="Nombre"><strong>${i.nombre}</strong>${i.completado ? ' <i class="fas fa-check-circle" style="color:var(--success);font-size:0.8rem;" title="Completado"></i>' : ''}<br><small class="badge badge-${tipoBadge[tipoKey] || 'info'}">${i.subtipo || tipoLabels[tipoKey]}</small></td>
+                            <td data-label="Fecha">${Dronigest.Utils.formatDate(i.fecha)}</td>
+                            <td data-label="Cliente">${i.cliente || '-'}</td>
+                            <td data-label="Piloto">${i.piloto || '-'}</td>
+                            <td data-label="Elementos">${i.numElementos || 0}</td>
+                            <td data-label="Anomalías">${i.numAnomalias > 0 ? `<span style="color:var(--danger);font-weight:700;">${i.numAnomalias}</span>` : '0'}</td>
+                            <td class="actions">
+                                ${i.completado ? `
+                                <button class="btn-action pdf" onclick="Dronigest.Informes.generar('inspeccion','${i.id}')" title="Generar informe PDF"><i class="fas fa-file-pdf"></i></button>
+                                ` : `
+                                <button class="btn-action edit" onclick="Dronigest.Inspecciones.editar('${i.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+                                <button class="btn-action complete" onclick="Dronigest.Informes.completar('inspeccion','${i.id}')" title="Marcar como completado"><i class="fas fa-check"></i></button>
+                                <button class="btn-action delete" onclick="Dronigest.Inspecciones.eliminar('${i.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                                `}
+                            </td>
+                        </tr>
+                    `).join('')}
                     </tbody>
                 </table>`;
         });
@@ -1864,16 +1869,21 @@ Dronigest.Agricola = {
                 <thead><tr><th>Nombre</th><th>Tipo</th><th>Cultivo</th><th>Superficie</th><th>Producto</th><th>Fecha</th><th>Acciones</th></tr></thead>
                 <tbody>
                     ${trabajos.map(t => `
-                        <tr>
-                            <td data-label="Nombre"><strong>${t.nombre}</strong></td>
+                        <tr class="${t.completado ? 'row-completed' : ''}">
+                            <td data-label="Nombre"><strong>${t.nombre}</strong>${t.completado ? ' <i class="fas fa-check-circle" style="color:var(--success);font-size:0.8rem;" title="Completado"></i>' : ''}</td>
                             <td data-label="Tipo"><span class="badge badge-success">${tipoLabels[t.tipo] || t.tipo}</span></td>
                             <td data-label="Cultivo">${t.cultivo || '-'}</td>
                             <td data-label="Superficie">${t.superficie ? t.superficie + ' ha' : '-'}</td>
                             <td data-label="Producto">${t.producto || '-'}</td>
                             <td data-label="Fecha">${Dronigest.Utils.formatDate(t.fecha)}</td>
                             <td class="actions">
+                                ${t.completado ? `
+                                <button class="btn-action pdf" onclick="Dronigest.Informes.generar('agricola','${t.id}')" title="Generar informe PDF"><i class="fas fa-file-pdf"></i></button>
+                                ` : `
                                 <button class="btn-action edit" onclick="Dronigest.Agricola.editar('${t.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+                                <button class="btn-action complete" onclick="Dronigest.Informes.completar('agricola','${t.id}')" title="Marcar como completado"><i class="fas fa-check"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Agricola.eliminar('${t.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                                `}
                             </td>
                         </tr>
                     `).join('')}
@@ -2163,8 +2173,8 @@ Dronigest.Cinegetico = {
                 <thead><tr><th>Nombre</th><th>Tipo</th><th>Fecha</th><th>Especie</th><th>Nº</th><th>Zona</th><th>Amenaza</th><th>Acciones</th></tr></thead>
                 <tbody>
                     ${registros.map(r => `
-                        <tr>
-                            <td data-label="Nombre"><strong>${r.nombre}</strong></td>
+                        <tr class="${r.completado ? 'row-completed' : ''}">
+                            <td data-label="Nombre"><strong>${r.nombre}</strong>${r.completado ? ' <i class="fas fa-check-circle" style="color:var(--success);font-size:0.8rem;" title="Completado"></i>' : ''}</td>
                             <td data-label="Tipo"><span class="badge badge-info">${tipoLabels[r.tipo] || r.tipo}</span></td>
                             <td data-label="Fecha">${Dronigest.Utils.formatDate(r.fecha)} ${r.hora || ''}</td>
                             <td data-label="Especie"><span class="badge badge-success">${r.especie || '-'}</span></td>
@@ -2172,8 +2182,13 @@ Dronigest.Cinegetico = {
                             <td data-label="Zona">${r.zona || '-'}</td>
                             <td data-label="Amenaza">${r.amenaza && r.amenaza !== 'ninguna' ? `<span class="badge badge-danger">${amenazaLabels[r.amenaza] || r.amenaza}</span>` : '-'}</td>
                             <td class="actions">
+                                ${r.completado ? `
+                                <button class="btn-action pdf" onclick="Dronigest.Informes.generar('cinegetico','${r.id}')" title="Generar informe PDF"><i class="fas fa-file-pdf"></i></button>
+                                ` : `
                                 <button class="btn-action edit" onclick="Dronigest.Cinegetico.editar('${r.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+                                <button class="btn-action complete" onclick="Dronigest.Informes.completar('cinegetico','${r.id}')" title="Marcar como completado"><i class="fas fa-check"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Cinegetico.eliminar('${r.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                                `}
                             </td>
                         </tr>
                     `).join('')}
@@ -2666,6 +2681,150 @@ Dronigest.CategoriasAesa = {
                     `).join('')}
                 </tbody>
             </table>`;
+    }
+};
+
+/* ===== INFORMES PDF ===== */
+Dronigest.Informes = {
+    generar(tipo, id) {
+        let item, title, fields;
+        if (tipo === 'inspeccion') {
+            item = Dronigest.DB.find('inspecciones', id);
+            if (!item) return;
+            title = 'Informe de Inspección';
+            const tipoLabels = { solar: 'Planta Solar', eolica: 'Torre Eólica', tendido: 'Tendido Eléctrico', superficies: 'Control Superficies' };
+            fields = [
+                ['Nombre / Referencia', item.nombre],
+                ['Tipo', tipoLabels[item.tipo] || item.tipo],
+                ['Subtipo', item.subtipo || '-'],
+                ['Cliente', item.cliente || '-'],
+                ['Fecha', Dronigest.Utils.formatDate(item.fecha)],
+                ['Piloto', item.piloto || '-'],
+                ['Ubicación', item.ubicacion || '-'],
+                ['Elementos inspeccionados', String(item.numElementos || 0)],
+                ['Anomalías encontradas', String(item.numAnomalias || 0)],
+                ['Observaciones', item.observaciones || 'Ninguna']
+            ];
+        } else if (tipo === 'agricola') {
+            item = Dronigest.DB.find('agricola', id);
+            if (!item) return;
+            title = 'Informe de Trabajo Agrícola';
+            const tipoLabels = {
+                pulverizacion: 'Pulverización', siembra: 'Siembra', fertilizacion: 'Fertilización',
+                censos: 'Censos', vigilancia: 'Vigilancia', tratamiento_semilla: 'Tratamiento semilla',
+                'dispersión_abono': 'Dispersión abono', polinizacion: 'Polinización',
+                control_plagas: 'Control plagas', riego: 'Riego', cosecha_asistida: 'Cosecha asistida', otro_ag: 'Otro'
+            };
+            const terrenoLabels = { llano: 'Llano', onduante: 'Ondulado', montañoso: 'Montañoso', misto: 'Mixto' };
+            fields = [
+                ['Nombre del trabajo', item.nombre],
+                ['Tipo', tipoLabels[item.tipo] || item.tipo],
+                ['Cultivo', item.cultivo || '-'],
+                ['Superficie', item.superficie ? item.superficie + ' ha' : '-'],
+                ['Fecha', Dronigest.Utils.formatDate(item.fecha)],
+                ['Producto', item.producto || '-'],
+                ['Dosis', item.dosis ? item.dosis + ' l/ha' : '-'],
+                ['Piloto', item.piloto || '-'],
+                ['Drone', item.drone || '-'],
+                ['Terreno', terrenoLabels[item.terreno] || item.terreno || '-'],
+                ['Observaciones', item.observaciones || 'Ninguna']
+            ];
+        } else if (tipo === 'cinegetico') {
+            item = Dronigest.DB.find('cinegetico', id);
+            if (!item) return;
+            title = 'Informe de Control Cinegético';
+            const tipoLabels = {
+                avistamiento: 'Avistamiento', censo_poblacion: 'Censo población', control_plagas: 'Control plagas',
+                vigilancia_caza: 'Vigilancia caza', seguimiento_heridos: 'Seguimiento heridos',
+                monitoreo_habitat: 'Monitoreo hábitat', control_cierres: 'Control cierres',
+                conteo_reproduccion: 'Conteo reproducción', otro_cg: 'Otro'
+            };
+            const estadoLabels = { saludable: 'Saludable', herido: 'Herido', enfermo: 'Enfermo', muerto: 'Muerto', desconocido: 'Desconocido' };
+            const amenazaLabels = {
+                ninguna: 'Ninguna', voraceras: 'Voraceras', cerco_ilegal: 'Cercado ilegal',
+                presencia_personas: 'Personas sospechosas', incendio: 'Incendio',
+                daño_cultivos: 'Daño cultivos', otra_amenaza: 'Otra'
+            };
+            fields = [
+                ['Nombre / Referencia', item.nombre],
+                ['Tipo', tipoLabels[item.tipo] || item.tipo],
+                ['Zona cinegética', item.zona || '-'],
+                ['Fecha', Dronigest.Utils.formatDate(item.fecha)],
+                ['Hora', item.hora || '-'],
+                ['Piloto', item.piloto || '-'],
+                ['Drone', item.drone || '-'],
+                ['Especie', item.especie || '-'],
+                ['Individuos', String(item.individuos || 0)],
+                ['Estado del animal', estadoLabels[item.estadoAnimal] || item.estadoAnimal || '-'],
+                ['Amenaza', amenazaLabels[item.amenaza] || item.amenaza || 'Ninguna'],
+                ['Observaciones', item.observaciones || 'Ninguna']
+            ];
+        } else {
+            return;
+        }
+
+        const ahora = new Date();
+        const fechaStr = ahora.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const rows = fields.map(([label, value]) =>
+            `<tr><td>${label}</td><td>${value}</td></tr>`
+        ).join('');
+
+        const win = window.open('', '_blank');
+        win.document.write(`
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>${title} - ${item.nombre}</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; padding: 40px; line-height: 1.5; }
+    .report-header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px double #0288D1; }
+    .report-header h1 { font-size: 24px; color: #01579B; margin: 0 0 5px; }
+    .report-header .report-subtitle { color: #607D8B; font-size: 14px; }
+    .report-info { margin-bottom: 25px; }
+    .report-info table { width: 100%; border-collapse: collapse; }
+    .report-info td { padding: 8px 12px; border: 1px solid #B3E5FC; font-size: 13px; }
+    .report-info td:first-child { font-weight: 600; background: #E1F5FE; width: 30%; color: #01579B; }
+    .report-section-title { font-size: 16px; font-weight: 700; color: #01579B; margin: 20px 0 10px; padding-bottom: 5px; border-bottom: 2px solid #B3E5FC; }
+    .report-footer { margin-top: 40px; padding-top: 15px; border-top: 1px solid #B3E5FC; font-size: 11px; color: #607D8B; text-align: center; }
+    .no-print { display: none !important; }
+    @media print { @page { margin: 15mm; } body { padding: 0; } }
+</style>
+</head>
+<body>
+    <div class="report-header">
+        <h1>${title}</h1>
+        <div class="report-subtitle">Dronigest - Gestión de actividades con drones</div>
+    </div>
+    <div class="report-section-title">Datos del informe</div>
+    <div class="report-info"><table>${rows}</table></div>
+    <div class="report-footer">
+        Informe generado el ${fechaStr} &mdash; Dronigest v1.5.0<br>
+        Este documento es un resumen informativo sin validez legal.
+    </div>
+    <script>
+        window.onload = function() { setTimeout(function() { window.print(); window.close(); }, 500); };
+    <\/script>
+</body>
+</html>`);
+        win.document.close();
+    },
+
+    completar(tipo, id) {
+        const coleccion = tipo === 'inspeccion' ? 'inspecciones' : tipo === 'agricola' ? 'agricola' : 'cinegetico';
+        const item = Dronigest.DB.find(coleccion, id);
+        if (!item) return;
+        if (item.completado) {
+            if (!confirm('¿Desmarcar como completado?')) return;
+        }
+        const updates = {
+            completado: !item.completado,
+            fechaCompletado: !item.completado ? new Date().toISOString() : null
+        };
+        Dronigest.DB.update(coleccion, id, updates);
+        Dronigest.Toast.show(updates.completado ? 'Registrado como completado' : 'Completado desmarcado', updates.completado ? 'success' : 'info');
+        if (tipo === 'inspeccion') Dronigest.Inspecciones.listar();
+        else if (tipo === 'agricola') Dronigest.Agricola.listar();
+        else Dronigest.Cinegetico.listar();
     }
 };
 

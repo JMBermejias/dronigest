@@ -732,6 +732,34 @@ textarea.form-control {
     color: white;
 }
 
+.btn-action.complete {
+    background: #E8F5E9;
+    color: var(--success);
+}
+
+.btn-action.complete:hover {
+    background: var(--success);
+    color: white;
+}
+
+.btn-action.pdf {
+    background: #FFF3E0;
+    color: var(--accent);
+}
+
+.btn-action.pdf:hover {
+    background: var(--accent);
+    color: white;
+}
+
+.data-table tr.row-completed {
+    opacity: 0.75;
+}
+
+.data-table tr.row-completed td {
+    background: #F5FCF5;
+}
+
 /* Badges */
 .badge {
     display: inline-block;
@@ -1770,4 +1798,79 @@ textarea.form-control {
     .btn-primary, .btn-secondary {
         -webkit-tap-highlight-color: transparent;
     }
+}
+
+/* ===== PRINT REPORT ===== */
+.report-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 3px double var(--primary);
+}
+
+.report-header h1 {
+    font-size: 24px;
+    color: var(--primary-dark);
+    margin: 0 0 5px;
+}
+
+.report-header .report-subtitle {
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.report-info {
+    margin-bottom: 25px;
+}
+
+.report-info table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.report-info td {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.report-info td:first-child {
+    font-weight: 600;
+    background: var(--primary-bg);
+    width: 30%;
+    color: var(--primary-dark);
+}
+
+.report-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin: 20px 0 10px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid var(--primary-light);
+}
+
+.report-obs {
+    padding: 12px;
+    background: #FAFAFA;
+    border-left: 4px solid var(--primary);
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-top: 10px;
+}
+
+.report-footer {
+    margin-top: 40px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-light);
+    text-align: center;
+}
+
+@media print {
+    @page { margin: 15mm; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; }
+    .no-print { display: none !important; }
 }
