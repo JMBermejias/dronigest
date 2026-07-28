@@ -295,23 +295,12 @@ Dronigest.Mapa = {
         if (Dronigest.map) return;
         const loc = Dronigest.userLocation || { lat: 40.4168, lng: -3.7038 };
 
-        Dronigest.map = L.map('map', { zoomControl: false, attributionControl: true }).setView([loc.lat, loc.lng], 13);
+        Dronigest.map = L.map('map').setView([loc.lat, loc.lng], 13);
 
-        const enaireDrones = L.tileLayer.wms(
-            'https://servais.enaire.es/insignia/services/NSF_SRV/SRV_UAS_ZG_V1/MapServer/WMSServer',
-            {
-                layers: '0,1,2',
-                format: 'image/png',
-                transparent: true,
-                version: '1.3.0',
-                crs: L.CRS.EPSG4326,
-                attribution: '&copy; ENAIRE - Zonas UAS'
-            }
-        );
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap', maxZoom: 19
+        }).addTo(Dronigest.map);
 
-        enaireDrones.addTo(Dronigest.map);
-
-        L.control.zoom({ position: 'topright' }).addTo(Dronigest.map);
         L.control.scale({ imperial: false }).addTo(Dronigest.map);
 
         const userIcon = L.divIcon({
@@ -322,6 +311,15 @@ Dronigest.Mapa = {
         });
         L.marker([loc.lat, loc.lng], { icon: userIcon }).addTo(Dronigest.map)
             .bindPopup('<b>Tu ubicación</b>');
+
+        const enaireIcon = L.divIcon({
+            className: 'enaire-marker',
+            html: '<div style="width:32px;height:32px;background:#0288D1;border:3px solid white;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-jet-fighter" style="color:white;font-size:16px;"></i></div>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+        });
+        L.marker([loc.lat, loc.lng], { icon: enaireIcon }).addTo(Dronigest.map)
+            .bindPopup('<b>ENAIRE Drones</b><br>Mapa oficial de zonas UAS<br><a href="https://drones.enaire.es/" target="_blank" style="color:#0288D1;font-weight:bold;">Abrir en nueva pestaña &rarr;</a>');
 
         this.cargarMarcadoresVuelos();
 
