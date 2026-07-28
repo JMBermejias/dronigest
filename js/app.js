@@ -297,22 +297,22 @@ Dronigest.Mapa = {
             attribution: '&copy; OpenStreetMap', maxZoom: 19
         });
 
-        const enaireBase = L.tileLayer('https://www.enaire.es/wmts/ign/ign-base000/{z}/{x}/{y}.png', {
-            attribution: '&copy; ENAIRE', maxZoom: 19
+        const enaireBase = L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=IGNBaseTodo&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}', {
+            attribution: '&copy; IGN', maxZoom: 19
         });
 
-        const enaireTN = L.tileLayer('https://www.enaire.es/wmts/ign/ign-base000-gris/{z}/{x}/{y}.png', {
-            attribution: '&copy; ENAIRE TN', maxZoom: 19
+        const enaireTN = L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=IGNBase-gris&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}', {
+            attribution: '&copy; IGN TN', maxZoom: 19
         });
 
         const baseMaps = {
             'OpenStreetMap': osmLayer,
-            'ENAIRE Base': enaireBase,
-            'ENAIRE TN': enaireTN
+            'IGN Base': enaireBase,
+            'IGN TN': enaireTN
         };
 
         osmLayer.addTo(Dronigest.map);
-        L.control.layers(baseMaps).addTo(Dronigest.map);
+        L.control.layers(baseMaps, null, { collapsed: true }).addTo(Dronigest.map);
 
         L.control.scale({ imperial: false }).addTo(Dronigest.map);
 
