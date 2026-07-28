@@ -680,7 +680,7 @@ textarea.form-control {
         font-weight: 600;
         min-height: auto;
     }
-    .data-table td:first-child:not([data-label])::before {
+    .data-table td:first-child::before {
         display: none;
     }
     .data-table td:last-child::before {
