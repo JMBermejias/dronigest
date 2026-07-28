@@ -2360,7 +2360,33 @@ Dronigest.Meteo = {
             }
         };
 
-        setTimeout(() => this.obtenerMeteorologia(), 2000);
+        setTimeout(() => this.cargarDashboard(), 2000);
+    },
+
+    async cargarDashboard() {
+        const container = document.getElementById('dashboardWeather');
+        if (!container) return;
+        const loc = Dronigest.userLocation || { lat: 40.4168, lng: -3.7038 };
+        try {
+            const data = await this.fetchWeather(loc.lat, loc.lng);
+            const c = data.current;
+            container.innerHTML = `
+                <div style="display:flex;align-items:center;gap:1rem;">
+                    <i class="fas ${c.icon}" style="font-size:2.5rem;color:#0288D1;"></i>
+                    <div>
+                        <div style="font-size:1.5rem;font-weight:700;">${c.temp}°C</div>
+                        <div style="color:var(--text-light);">${c.description}</div>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.8rem;font-size:0.85rem;">
+                    <div><i class="fas fa-wind" style="color:#0288D1;"></i> Viento: ${c.wind} km/h ${c.windDir}</div>
+                    <div><i class="fas fa-droplet" style="color:#0288D1;"></i> Humedad: ${c.humidity}%</div>
+                    <div><i class="fas fa-cloud" style="color:#0288D1;"></i> Nubosidad: ${c.cloudCover}%</div>
+                    <div><i class="fas fa-cloud-rain" style="color:#0288D1;"></i> Precip: ${c.precip} mm</div>
+                </div>`;
+        } catch {
+            container.innerHTML = '<p class="empty-state">No se pudieron cargar datos meteorológicos</p>';
+        }
     },
 
     async obtenerMeteorologia() {

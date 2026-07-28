@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dronigest-v4';
+const CACHE_NAME = 'dronigest-v5';
 const STATIC_ASSETS = [
     './',
     './index.html',
