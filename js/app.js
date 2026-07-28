@@ -291,27 +291,25 @@ Dronigest.Geolocation = {
 
 /* ===== MAPA ===== */
 Dronigest.Mapa = {
-    _enaireOverlay: null,
-
-    _updateEnaire() {
-        const map = Dronigest.map;
-        if (!map) return;
-        const b = map.getBounds();
-        const s = map.getSize();
-        const bbox = `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`;
-        const url = `https://servais.enaire.es/insignia/rest/services/NSF_SRV/SRV_UAS_ZG_V1/MapServer/export?dpi=96&transparent=true&format=png32&layers=show:0,2,3&bbox=${bbox}&bboxSR=4326&imageSR=4326&size=${s.x},${s.y}&f=image&_=${Date.now()}`;
-        if (this._enaireOverlay) map.removeLayer(this._enaireOverlay);
-        this._enaireOverlay = L.imageOverlay(url, b, { opacity: 0.8 }).addTo(map);
-    },
-
     init() {
         if (Dronigest.map) return;
         const loc = Dronigest.userLocation || { lat: 40.4168, lng: -3.7038 };
 
-        Dronigest.map = L.map('map', { zoomControl: false }).setView([loc.lat, loc.lng], 13);
+        Dronigest.map = L.map('map', { zoomControl: false, attributionControl: true }).setView([loc.lat, loc.lng], 13);
 
-        this._updateEnaire();
-        Dronigest.map.on('moveend zoomend resize', () => this._updateEnaire(), this);
+        const enaireDrones = L.tileLayer.wms(
+            'https://servais.enaire.es/insignia/services/NSF_SRV/SRV_UAS_ZG_V1/MapServer/WMSServer',
+            {
+                layers: '0,1,2',
+                format: 'image/png',
+                transparent: true,
+                version: '1.3.0',
+                crs: L.CRS.EPSG4326,
+                attribution: '&copy; ENAIRE - Zonas UAS'
+            }
+        );
+
+        enaireDrones.addTo(Dronigest.map);
 
         L.control.zoom({ position: 'topright' }).addTo(Dronigest.map);
         L.control.scale({ imperial: false }).addTo(Dronigest.map);
