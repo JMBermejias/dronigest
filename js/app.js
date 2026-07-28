@@ -555,7 +555,7 @@ Dronigest.Vuelos = {
                 <tbody>
                     ${vuelos.map(v => `
                         <tr>
-                            <td><strong>${v.nombre || '-'}</strong></td>
+                            <td data-label="Nombre"><strong>${v.nombre || '-'}</strong></td>
                             <td data-label="Fecha">${Dronigest.Utils.formatDate(v.fecha)}</td>
                             <td data-label="Piloto">${v.piloto || '-'}</td>
                             <td data-label="Drone">${v.drone || '-'}</td>
@@ -754,7 +754,7 @@ Dronigest.Pilotos = {
                 <tbody>
                     ${pilotos.map(p => `
                         <tr>
-                            <td><span class="row-icon" style="background:#E3F2FD;color:#0288D1;"><i class="fas fa-user-tie"></i></span> <strong>${p.nombre}</strong></td>
+                            <td data-label="Nombre"><span class="row-icon" style="background:#E3F2FD;color:#0288D1;"><i class="fas fa-user-tie"></i></span> <strong>${p.nombre}</strong></td>
                             <td data-label="NIF">${p.nif || '-'}</td>
                             <td data-label="Certificación">${p.certificacion || '-'}</td>
                             <td data-label="Categoría"><span class="badge badge-info">${p.categoria || '-'}</span></td>
@@ -782,7 +782,7 @@ Dronigest.Pilotos = {
                 <tbody>
                     ${auxiliares.map(a => `
                         <tr>
-                            <td><span class="row-icon" style="background:#E8F5E9;color:#2E7D32;"><i class="fas fa-user-friends"></i></span> <strong>${a.nombre}</strong></td>
+                            <td data-label="Nombre"><span class="row-icon" style="background:#E8F5E9;color:#2E7D32;"><i class="fas fa-user-friends"></i></span> <strong>${a.nombre}</strong></td>
                             <td data-label="NIF">${a.nif || '-'}</td>
                             <td data-label="Función"><span class="badge badge-info">${a.funcion || '-'}</span></td>
                             <td data-label="Teléfono">${a.telefono || '-'}</td>
@@ -942,7 +942,7 @@ Dronigest.TiposVuelo = {
                 <tbody>
                     ${tipos.map(t => `
                         <tr>
-                            <td><strong>${t.nombre}</strong><br><small style="color:var(--text-light)">${t.descripcion || ''}</small></td>
+                            <td data-label="Nombre"><strong>${t.nombre}</strong><br><small style="color:var(--text-light)">${t.descripcion || ''}</small></td>
                             <td data-label="Categoría"><span class="badge badge-info">${t.categoria || '-'}</span></td>
                             <td data-label="Alt. Máx">${t.altitudMax || '-'}m</td>
                             <td data-label="Dist. Máx">${t.distanciaMax || '-'}m</td>
@@ -969,7 +969,7 @@ Dronigest.TiposVuelo = {
                 <tbody>
                     ${cats.map(c => `
                         <tr>
-                            <td><strong>${c.nombre}</strong></td>
+                            <td data-label="Nombre"><strong>${c.nombre}</strong></td>
                             <td data-label="Código"><span class="badge badge-info">${c.codigo || '-'}</span></td>
                             <td data-label="Descripción">${c.descripcion || '-'}</td>
                             <td class="actions">
@@ -1330,7 +1330,7 @@ Dronigest.Equipos = {
                 <tbody>
                     ${drones.map(d => `
                         <tr>
-                            <td><span class="row-icon" style="background:#E1F5FE;color:#01579B;"><i class="fas fa-helicopter"></i></span> <strong>${d.nombre}</strong></td>
+                            <td data-label="Nombre"><span class="row-icon" style="background:#E1F5FE;color:#01579B;"><i class="fas fa-helicopter"></i></span> <strong>${d.nombre}</strong></td>
                             <td data-label="Modelo">${d.modelo || '-'}</td>
                             <td data-label="Nº Serie">${d.serie || '-'}</td>
                             <td data-label="Horas">${d.horasVuelo || 0}h</td>
@@ -1358,7 +1358,7 @@ Dronigest.Equipos = {
                 <tbody>
                     ${modelos.map(m => `
                         <tr>
-                            <td><span class="row-icon" style="background:#FFF3E0;color:#E65100;"><i class="fas fa-th-large"></i></span> <strong>${m.nombre}</strong></td>
+                            <td data-label="Nombre"><span class="row-icon" style="background:#FFF3E0;color:#E65100;"><i class="fas fa-th-large"></i></span> <strong>${m.nombre}</strong></td>
                             <td data-label="Marca">${m.marca || '-'}</td>
                             <td data-label="Tipo"><span class="badge badge-info">${m.tipo || '-'}</span></td>
                             <td data-label="Peso">${m.peso ? m.peso + 'g' : '-'}</td>
@@ -1387,7 +1387,7 @@ Dronigest.Equipos = {
                 <tbody>
                     ${acc.map(a => `
                         <tr>
-                            <td><span class="row-icon" style="background:#F3E5F5;color:#7B1FA2;"><i class="fas fa-puzzle-piece"></i></span> <strong>${a.nombre}</strong></td>
+                            <td data-label="Nombre"><span class="row-icon" style="background:#F3E5F5;color:#7B1FA2;"><i class="fas fa-puzzle-piece"></i></span> <strong>${a.nombre}</strong></td>
                             <td data-label="Marca">${a.marca || '-'}</td>
                             <td data-label="Compatible">${a.compatible || '-'}</td>
                             <td data-label="Cantidad">${a.cantidad || 1}</td>
@@ -1539,7 +1539,7 @@ Dronigest.Trabajos = {
                 <tbody>
                     ${trabajos.map(t => `
                         <tr>
-                            <td><strong>${t.nombre}</strong><br><small style="color:var(--text-light)">${Dronigest.Utils.formatDate(t.fechaInicio)}</small></td>
+                            <td data-label="Nombre"><strong>${t.nombre}</strong><br><small style="color:var(--text-light)">${Dronigest.Utils.formatDate(t.fechaInicio)}</small></td>
                             <td data-label="Tipo"><span class="badge badge-info">${tipoLabels[t.tipo] || t.tipo}</span></td>
                             <td data-label="Cliente">${t.cliente || '-'}</td>
                             <td data-label="Piloto">${t.piloto || '-'}</td>
@@ -1707,7 +1707,7 @@ Dronigest.Inspecciones = {
                     <tbody>
                         ${items.map(i => `
                             <tr>
-                                <td><strong>${i.nombre}</strong><br><small class="badge badge-${tipoBadge[tipoKey] || 'info'}">${i.subtipo || tipoLabels[tipoKey]}</small></td>
+                                <td data-label="Nombre"><strong>${i.nombre}</strong><br><small class="badge badge-${tipoBadge[tipoKey] || 'info'}">${i.subtipo || tipoLabels[tipoKey]}</small></td>
                                 <td data-label="Fecha">${Dronigest.Utils.formatDate(i.fecha)}</td>
                                 <td data-label="Cliente">${i.cliente || '-'}</td>
                                 <td data-label="Piloto">${i.piloto || '-'}</td>
@@ -1860,7 +1860,7 @@ Dronigest.Agricola = {
                 <tbody>
                     ${trabajos.map(t => `
                         <tr>
-                            <td><strong>${t.nombre}</strong></td>
+                            <td data-label="Nombre"><strong>${t.nombre}</strong></td>
                             <td data-label="Tipo"><span class="badge badge-success">${tipoLabels[t.tipo] || t.tipo}</span></td>
                             <td data-label="Cultivo">${t.cultivo || '-'}</td>
                             <td data-label="Superficie">${t.superficie ? t.superficie + ' ha' : '-'}</td>
@@ -2159,7 +2159,7 @@ Dronigest.Cinegetico = {
                 <tbody>
                     ${registros.map(r => `
                         <tr>
-                            <td><strong>${r.nombre}</strong></td>
+                            <td data-label="Nombre"><strong>${r.nombre}</strong></td>
                             <td data-label="Tipo"><span class="badge badge-info">${tipoLabels[r.tipo] || r.tipo}</span></td>
                             <td data-label="Fecha">${Dronigest.Utils.formatDate(r.fecha)} ${r.hora || ''}</td>
                             <td data-label="Especie"><span class="badge badge-success">${r.especie || '-'}</span></td>
@@ -2189,7 +2189,7 @@ Dronigest.Cinegetico = {
                 <tbody>
                     ${zonas.map(z => `
                         <tr>
-                            <td><strong>${z.nombre}</strong></td>
+                            <td data-label="Nombre"><strong>${z.nombre}</strong></td>
                             <td data-label="Superficie">${z.superficie ? z.superficie + ' ha' : '-'}</td>
                             <td data-label="Terreno"><span class="badge badge-info">${z.terreno || '-'}</span></td>
                             <td data-label="Especies">${z.especies || '-'}</td>
@@ -2218,7 +2218,7 @@ Dronigest.Cinegetico = {
                 <tbody>
                     ${especies.map(e => `
                         <tr>
-                            <td><strong>${e.nombre}</strong></td>
+                            <td data-label="Nombre"><strong>${e.nombre}</strong></td>
                             <td data-label="Nombre Científico"><em>${e.nombreCientifico || '-'}</em></td>
                             <td data-label="Familia">${e.familia || '-'}</td>
                             <td data-label="Estado"><span class="badge badge-${e.estado === 'comun' ? 'success' : e.estado === 'protegida' ? 'danger' : 'warning'}">${e.estado || '-'}</span></td>
