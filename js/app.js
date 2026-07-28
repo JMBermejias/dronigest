@@ -597,10 +597,11 @@ Dronigest.Pilotos = {
             <div class="form-row">
                 <div class="form-group"><label>Categoría</label>
                     <select id="pCategoria" class="form-control">
-                        <option value="A1">A1 - Vuelo en area de personas</option>
-                        <option value="A2">A2 - Vuelo cercano a personas</option>
-                        <option value="A3">A3 - Vuelo lejos de personas</option>
-                        <option value="A3cat">A3 - Categoría específica</option>
+                        <option value="A1">A1</option>
+                        <option value="A2">A2</option>
+                        <option value="A3">A3</option>
+                        <option value="STS-01">STS-01</option>
+                        <option value="STS-02">STS-02</option>
                     </select>
                 </div>
                 <div class="form-group"><label>Cobertura Seguro</label><input type="text" id="pSeguro" class="form-control" placeholder="Nº póliza"></div>
