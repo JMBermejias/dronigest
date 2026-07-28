@@ -257,6 +257,7 @@ body {
 .page {
     display: none;
     animation: fadeIn 0.3s ease;
+    overflow-x: hidden;
 }
 
 .page.active {
