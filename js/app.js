@@ -216,8 +216,12 @@ Dronigest.Navigation = {
         this.currentPage = page;
         document.getElementById('sidebar').classList.remove('mobile-open');
 
-        if (page === 'vuelos' && !Dronigest.map) {
-            setTimeout(() => Dronigest.Mapa.init(), 100);
+        if (page === 'vuelos') {
+            if (!Dronigest.map) {
+                setTimeout(() => Dronigest.Mapa.init(), 150);
+            } else {
+                setTimeout(() => Dronigest.map.invalidateSize(), 300);
+            }
         }
         if (page === 'meteorologia') Dronigest.Meteo.obtenerMeteorologia();
     }
@@ -321,7 +325,7 @@ Dronigest.Mapa = {
                 const b = this._map.getBounds();
                 const s = this._map.getSize();
                 const bbox = `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`;
-                const url = `https://servais.enaire.es/insignias/rest/services/NSF/Drones_ZG_Aero_V2_2/MapServer/export?dpi=96&transparent=true&format=png32&layers=show:0,1,2,3,4,5,6,7,8,9,10,11&bbox=${bbox}&bboxSR=4326&imageSR=4326&size=${s.x},${s.y}&f=image`;
+                const url = `https://servais.enaire.es/insignia/rest/services/NSF_SRV/SRV_UAS_ZG_V1/MapServer/export?dpi=96&transparent=true&format=png32&layers=show:0,2,3&bbox=${bbox}&bboxSR=4326&imageSR=4326&size=${s.x},${s.y}&f=image`;
                 this.setUrl(url);
                 this.setBounds(b);
             }
