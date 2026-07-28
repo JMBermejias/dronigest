@@ -190,7 +190,17 @@ Dronigest.Navigation = {
         if (toggle) toggle.onclick = () => document.getElementById('sidebar').classList.toggle('collapsed');
 
         const mobileBtn = document.getElementById('mobileMenuBtn');
-        if (mobileBtn) mobileBtn.onclick = () => document.getElementById('sidebar').classList.toggle('mobile-open');
+        if (mobileBtn) mobileBtn.onclick = () => {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        };
+        const overlay = document.getElementById('sidebarOverlay');
+        if (overlay) overlay.onclick = () => {
+        document.getElementById('sidebar').classList.remove('mobile-open');
+        const ov = document.getElementById('sidebarOverlay');
+        if (ov) ov.classList.remove('active');
+            overlay.classList.remove('active');
+        };
     },
 
     goTo(page) {
@@ -358,7 +368,10 @@ Dronigest.Dashboard = {
     actualizar() {
         document.getElementById('statVuelos').textContent = Dronigest.DB.get('vuelos').length;
         document.getElementById('statPilotos').textContent = Dronigest.DB.get('pilotos').length;
+        document.getElementById('statAuxiliares').textContent = Dronigest.DB.get('auxiliares').length;
         document.getElementById('statDrones').textContent = Dronigest.DB.get('drones').length;
+        const eqEl = document.getElementById('statEquipos');
+        if (eqEl) eqEl.textContent = Dronigest.DB.get('modelos').length + Dronigest.DB.get('accesorios').length;
         document.getElementById('statTrabajos').textContent = Dronigest.DB.get('trabajos').length;
         const cinegEl = document.getElementById('statCinegetico');
         if (cinegEl) cinegEl.textContent = Dronigest.DB.get('cinegetico').length;
