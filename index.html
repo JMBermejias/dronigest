@@ -22,7 +22,6 @@
     <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192.png">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -258,15 +257,15 @@
                         </div>
                     </div>
                     <div class="vuelos-layout">
-                        <div class="card map-card">
+                        <div class="card">
                             <div class="card-header">
-                                <h2><i class="fas fa-map"></i> Mapa ENAIRE Drones</h2>
-                                <button class="btn-sm" onclick="Dronigest.Mapa.geolocalizar()">
-                                    <i class="fas fa-crosshairs"></i> Mi ubicación
-                                </button>
+                                <h2><i class="fas fa-plane"></i> ENAIRE Drones</h2>
                             </div>
-                            <div class="card-body">
-                                <div id="map" class="map-container"></div>
+                            <div class="card-body" style="text-align:center; padding:2rem;">
+                                <p style="margin-bottom:1rem; color:#555;">Consulta el mapa oficial de zonas UAS en la plataforma de ENAIRE</p>
+                                <a href="https://drones.enaire.es/" target="_blank" class="btn-primary" style="display:inline-block; padding:0.8rem 2rem; font-size:1.1rem;">
+                                    <i class="fas fa-external-link-alt"></i> Abrir ENAIRE Drones
+                                </a>
                             </div>
                         </div>
                         <div class="card">
@@ -816,7 +815,6 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

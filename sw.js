@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dronigest-v3';
+const CACHE_NAME = 'dronigest-v4';
 const STATIC_ASSETS = [
     './',
     './index.html',
@@ -11,8 +11,6 @@ const STATIC_ASSETS = [
 ];
 
 const EXTERNAL_ASSETS = [
-    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
 

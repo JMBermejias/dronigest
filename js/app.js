@@ -1,12 +1,9 @@
 const Dronigest = {
-    map: null,
-    markers: [],
     userLocation: null,
 
     init() {
         this.Navigation.init();
         this.DB.init();
-        this.Mapa.init();
         this.Dashboard.init();
         this.Geolocation.init();
         this.Meteo.init();
@@ -216,13 +213,6 @@ Dronigest.Navigation = {
         this.currentPage = page;
         document.getElementById('sidebar').classList.remove('mobile-open');
 
-        if (page === 'vuelos') {
-            if (!Dronigest.map) {
-                setTimeout(() => Dronigest.Mapa.init(), 150);
-            } else {
-                setTimeout(() => Dronigest.map.invalidateSize(), 300);
-            }
-        }
         if (page === 'meteorologia') Dronigest.Meteo.obtenerMeteorologia();
     }
 };
@@ -286,73 +276,6 @@ Dronigest.Geolocation = {
         } catch {
             document.querySelector('#locationInfo span').textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
         }
-    }
-};
-
-/* ===== MAPA ===== */
-Dronigest.Mapa = {
-    init() {
-        if (Dronigest.map) return;
-        const loc = Dronigest.userLocation || { lat: 40.4168, lng: -3.7038 };
-
-        Dronigest.map = L.map('map').setView([loc.lat, loc.lng], 13);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap', maxZoom: 19
-        }).addTo(Dronigest.map);
-
-        L.control.scale({ imperial: false }).addTo(Dronigest.map);
-
-        const userIcon = L.divIcon({
-            className: 'user-marker',
-            html: '<div style="width:20px;height:20px;background:#0288D1;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
-        });
-        L.marker([loc.lat, loc.lng], { icon: userIcon }).addTo(Dronigest.map)
-            .bindPopup('<b>Tu ubicación</b>');
-
-        const enaireIcon = L.divIcon({
-            className: 'enaire-marker',
-            html: '<div style="width:32px;height:32px;background:#0288D1;border:3px solid white;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-jet-fighter" style="color:white;font-size:16px;"></i></div>',
-            iconSize: [32, 32],
-            iconAnchor: [16, 16]
-        });
-        L.marker([loc.lat, loc.lng], { icon: enaireIcon }).addTo(Dronigest.map)
-            .bindPopup('<b>ENAIRE Drones</b><br>Mapa oficial de zonas UAS<br><a href="https://drones.enaire.es/" target="_blank" style="color:#0288D1;font-weight:bold;">Abrir en nueva pestaña &rarr;</a>');
-
-        this.cargarMarcadoresVuelos();
-
-        setTimeout(() => Dronigest.map.invalidateSize(), 200);
-    },
-
-    geolocalizar() {
-        if (!Dronigest.userLocation) {
-            Dronigest.Toast.show('Obteniendo ubicación...', 'info');
-            return;
-        }
-        if (Dronigest.map) {
-            Dronigest.map.setView([Dronigest.userLocation.lat, Dronigest.userLocation.lng], 14);
-        }
-    },
-
-    cargarMarcadoresVuelos() {
-        if (!Dronigest.map) return;
-        Dronigest.markers.forEach(m => Dronigest.map.removeLayer(m));
-        Dronigest.markers = [];
-        const vuelos = Dronigest.DB.get('vuelos');
-        vuelos.filter(v => v.lat && v.lng).forEach(v => {
-            const icon = L.divIcon({
-                className: 'flight-marker',
-                html: `<div style="width:28px;height:28px;background:${v.estado === 'completado' ? '#43A047' : v.estado === 'en_curso' ? '#FF6F00' : '#0288D1'};border:2px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,0.3);"><i class="fas fa-helicopter" style="font-size:12px;"></i></div>`,
-                iconSize: [28, 28],
-                iconAnchor: [14, 14]
-            });
-            const marker = L.marker([v.lat, v.lng], { icon })
-                .addTo(Dronigest.map)
-                .bindPopup(`<b>${v.nombre || 'Vuelo'}</b><br>${v.fecha || ''}<br><span class="badge badge-${v.estado === 'completado' ? 'success' : v.estado === 'en_curso' ? 'warning' : 'info'}">${v.estado || 'programado'}</span>`);
-            Dronigest.markers.push(marker);
-        });
     }
 };
 
@@ -555,7 +478,6 @@ Dronigest.Vuelos = {
         }
         Dronigest.Modal.cerrar();
         this.listar();
-        Dronigest.Mapa.cargarMarcadoresVuelos();
         Dronigest.Dashboard.actualizar();
     },
 
@@ -593,7 +515,6 @@ Dronigest.Vuelos = {
             Dronigest.DB.remove('vuelos', id);
             Dronigest.Toast.show('Vuelo eliminado', 'info');
             this.listar();
-            Dronigest.Mapa.cargarMarcadoresVuelos();
             Dronigest.Dashboard.actualizar();
         }
     },
@@ -603,7 +524,6 @@ Dronigest.Vuelos = {
         Dronigest.Toast.show(`Vuelo marcado como ${estado}`, 'success');
         Dronigest.DB.logActividad('vuelo', `Vuelo ${estado}`, '');
         this.listar();
-        Dronigest.Mapa.cargarMarcadoresVuelos();
         Dronigest.Dashboard.actualizar();
     },
 
@@ -2432,7 +2352,13 @@ Dronigest.Meteo = {
         const btn = document.getElementById('btnWeather');
         if (btn) btn.onclick = () => { Dronigest.Navigation.goTo('meteorologia'); this.obtenerMeteorologia(); };
         const btnGeo = document.getElementById('btnGeolocate');
-        if (btnGeo) btnGeo.onclick = () => Dronigest.Mapa.geolocalizar();
+        if (btnGeo) btnGeo.onclick = () => {
+            if (Dronigest.userLocation) {
+                Dronigest.Toast.show(`Ubicación: ${Dronigest.userLocation.lat.toFixed(4)}, ${Dronigest.userLocation.lng.toFixed(4)}`, 'info');
+            } else {
+                Dronigest.Toast.show('Obteniendo ubicación...', 'info');
+            }
+        };
 
         setTimeout(() => this.obtenerMeteorologia(), 2000);
     },
