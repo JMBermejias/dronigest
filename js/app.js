@@ -291,33 +291,29 @@ Dronigest.Geolocation = {
 
 /* ===== MAPA ===== */
 Dronigest.Mapa = {
+    _enaireOverlay: null,
+
+    _updateEnaire() {
+        const map = Dronigest.map;
+        if (!map) return;
+        const b = map.getBounds();
+        const s = map.getSize();
+        const bbox = `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`;
+        const url = `https://servais.enaire.es/insignia/rest/services/NSF_SRV/SRV_UAS_ZG_V1/MapServer/export?dpi=96&transparent=true&format=png32&layers=show:0,2,3&bbox=${bbox}&bboxSR=4326&imageSR=4326&size=${s.x},${s.y}&f=image&_=${Date.now()}`;
+        if (this._enaireOverlay) map.removeLayer(this._enaireOverlay);
+        this._enaireOverlay = L.imageOverlay(url, b, { opacity: 0.8 }).addTo(map);
+    },
+
     init() {
         if (Dronigest.map) return;
         const loc = Dronigest.userLocation || { lat: 40.4168, lng: -3.7038 };
 
-        Dronigest.map = L.map('map').setView([loc.lat, loc.lng], 13);
+        Dronigest.map = L.map('map', { zoomControl: false }).setView([loc.lat, loc.lng], 13);
 
-        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap', maxZoom: 19
-        });
+        this._updateEnaire();
+        Dronigest.map.on('moveend zoomend resize', () => this._updateEnaire(), this);
 
-        const enaireBase = L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/png&layer=IGNBaseTodo&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}', {
-            attribution: '&copy; IGN', maxZoom: 19
-        });
-
-        const enaireTN = L.tileLayer('https://www.ign.es/wmts/ign-base?service=WMTS&request=GetTile&version=1.0.0&Format=image/jpeg&layer=IGNBase-gris&style=default&tilematrixset=GoogleMapsCompatible&TileMatrix={z}&TileRow={y}&TileCol={x}', {
-            attribution: '&copy; IGN TN', maxZoom: 19
-        });
-
-        const baseMaps = {
-            'OpenStreetMap': osmLayer,
-            'IGN Base': enaireBase,
-            'IGN TN': enaireTN
-        };
-
-        osmLayer.addTo(Dronigest.map);
-        L.control.layers(baseMaps, null, { collapsed: true }).addTo(Dronigest.map);
-
+        L.control.zoom({ position: 'topright' }).addTo(Dronigest.map);
         L.control.scale({ imperial: false }).addTo(Dronigest.map);
 
         const userIcon = L.divIcon({
