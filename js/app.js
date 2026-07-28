@@ -640,11 +640,11 @@ Dronigest.Vuelos = {
                     ${vuelos.map(v => `
                         <tr>
                             <td><strong>${v.nombre || '-'}</strong></td>
-                            <td>${Dronigest.Utils.formatDate(v.fecha)}</td>
-                            <td>${v.piloto || '-'}</td>
-                            <td>${v.drone || '-'}</td>
-                            <td>${v.tipoVuelo || '-'}</td>
-                            <td><span class="badge badge-${v.estado === 'completado' ? 'success' : v.estado === 'en_curso' ? 'warning' : v.estado === 'cancelado' ? 'danger' : 'info'}">${v.estado || 'programado'}</span></td>
+                            <td data-label="Fecha">${Dronigest.Utils.formatDate(v.fecha)}</td>
+                            <td data-label="Piloto">${v.piloto || '-'}</td>
+                            <td data-label="Drone">${v.drone || '-'}</td>
+                            <td data-label="Tipo">${v.tipoVuelo || '-'}</td>
+                            <td data-label="Estado"><span class="badge badge-${v.estado === 'completado' ? 'success' : v.estado === 'en_curso' ? 'warning' : v.estado === 'cancelado' ? 'danger' : 'info'}">${v.estado || 'programado'}</span></td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Vuelos.editar('${v.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 ${v.estado === 'programado' ? `<button class="btn-action" style="background:#E8F5E9;color:#43A047;" onclick="Dronigest.Vuelos.cambiarEstado('${v.id}','en_curso')" title="Iniciar"><i class="fas fa-play"></i></button>` : ''}
@@ -838,10 +838,10 @@ Dronigest.Pilotos = {
                     ${pilotos.map(p => `
                         <tr>
                             <td><span class="row-icon" style="background:#E3F2FD;color:#0288D1;"><i class="fas fa-user-tie"></i></span> <strong>${p.nombre}</strong></td>
-                            <td>${p.nif || '-'}</td>
-                            <td>${p.certificacion || '-'}</td>
-                            <td><span class="badge badge-info">${p.categoria || '-'}</span></td>
-                            <td>${p.telefono || '-'}</td>
+                            <td data-label="NIF">${p.nif || '-'}</td>
+                            <td data-label="Certificación">${p.certificacion || '-'}</td>
+                            <td data-label="Categoría"><span class="badge badge-info">${p.categoria || '-'}</span></td>
+                            <td data-label="Teléfono">${p.telefono || '-'}</td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Pilotos.editarPiloto('${p.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Pilotos.eliminarPiloto('${p.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -866,9 +866,9 @@ Dronigest.Pilotos = {
                     ${auxiliares.map(a => `
                         <tr>
                             <td><span class="row-icon" style="background:#E8F5E9;color:#2E7D32;"><i class="fas fa-user-friends"></i></span> <strong>${a.nombre}</strong></td>
-                            <td>${a.nif || '-'}</td>
-                            <td><span class="badge badge-info">${a.funcion || '-'}</span></td>
-                            <td>${a.telefono || '-'}</td>
+                            <td data-label="NIF">${a.nif || '-'}</td>
+                            <td data-label="Función"><span class="badge badge-info">${a.funcion || '-'}</span></td>
+                            <td data-label="Teléfono">${a.telefono || '-'}</td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Pilotos.editarAuxiliar('${a.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Pilotos.eliminarAuxiliar('${a.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -1026,9 +1026,9 @@ Dronigest.TiposVuelo = {
                     ${tipos.map(t => `
                         <tr>
                             <td><strong>${t.nombre}</strong><br><small style="color:var(--text-light)">${t.descripcion || ''}</small></td>
-                            <td><span class="badge badge-info">${t.categoria || '-'}</span></td>
-                            <td>${t.altitudMax || '-'}m</td>
-                            <td>${t.distanciaMax || '-'}m</td>
+                            <td data-label="Categoría"><span class="badge badge-info">${t.categoria || '-'}</span></td>
+                            <td data-label="Alt. Máx">${t.altitudMax || '-'}m</td>
+                            <td data-label="Dist. Máx">${t.distanciaMax || '-'}m</td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.TiposVuelo.editar('${t.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.TiposVuelo.eliminar('${t.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -1053,8 +1053,8 @@ Dronigest.TiposVuelo = {
                     ${cats.map(c => `
                         <tr>
                             <td><strong>${c.nombre}</strong></td>
-                            <td><span class="badge badge-info">${c.codigo || '-'}</span></td>
-                            <td>${c.descripcion || '-'}</td>
+                            <td data-label="Código"><span class="badge badge-info">${c.codigo || '-'}</span></td>
+                            <td data-label="Descripción">${c.descripcion || '-'}</td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.TiposVuelo.editarCategoria('${c.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.TiposVuelo.eliminarCategoria('${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -1414,10 +1414,10 @@ Dronigest.Equipos = {
                     ${drones.map(d => `
                         <tr>
                             <td><span class="row-icon" style="background:#E1F5FE;color:#01579B;"><i class="fas fa-helicopter"></i></span> <strong>${d.nombre}</strong></td>
-                            <td>${d.modelo || '-'}</td>
-                            <td>${d.serie || '-'}</td>
-                            <td>${d.horasVuelo || 0}h</td>
-                            <td><span class="badge badge-${d.estado === 'operativo' ? 'success' : d.estado === 'averiado' ? 'danger' : 'warning'}">${d.estado || '-'}</span></td>
+                            <td data-label="Modelo">${d.modelo || '-'}</td>
+                            <td data-label="Nº Serie">${d.serie || '-'}</td>
+                            <td data-label="Horas">${d.horasVuelo || 0}h</td>
+                            <td data-label="Estado"><span class="badge badge-${d.estado === 'operativo' ? 'success' : d.estado === 'averiado' ? 'danger' : 'warning'}">${d.estado || '-'}</span></td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Equipos.editarDrone('${d.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Equipos.eliminarDrone('${d.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -1442,11 +1442,11 @@ Dronigest.Equipos = {
                     ${modelos.map(m => `
                         <tr>
                             <td><span class="row-icon" style="background:#FFF3E0;color:#E65100;"><i class="fas fa-th-large"></i></span> <strong>${m.nombre}</strong></td>
-                            <td>${m.marca || '-'}</td>
-                            <td><span class="badge badge-info">${m.tipo || '-'}</span></td>
-                            <td>${m.peso ? m.peso + 'g' : '-'}</td>
-                            <td>${m.autonomia ? m.autonomia + 'min' : '-'}</td>
-                            <td><span class="badge badge-info">${m.categoria || '-'}</span></td>
+                            <td data-label="Marca">${m.marca || '-'}</td>
+                            <td data-label="Tipo"><span class="badge badge-info">${m.tipo || '-'}</span></td>
+                            <td data-label="Peso">${m.peso ? m.peso + 'g' : '-'}</td>
+                            <td data-label="Autonomía">${m.autonomia ? m.autonomia + 'min' : '-'}</td>
+                            <td data-label="Categoría"><span class="badge badge-info">${m.categoria || '-'}</span></td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Equipos.editarModelo('${m.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Equipos.eliminarModelo('${m.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -1471,10 +1471,10 @@ Dronigest.Equipos = {
                     ${acc.map(a => `
                         <tr>
                             <td><span class="row-icon" style="background:#F3E5F5;color:#7B1FA2;"><i class="fas fa-puzzle-piece"></i></span> <strong>${a.nombre}</strong></td>
-                            <td>${a.marca || '-'}</td>
-                            <td>${a.compatible || '-'}</td>
-                            <td>${a.cantidad || 1}</td>
-                            <td><span class="badge badge-${a.estado === 'disponible' ? 'success' : a.estado === 'agotado' ? 'danger' : 'warning'}">${a.estado || '-'}</span></td>
+                            <td data-label="Marca">${a.marca || '-'}</td>
+                            <td data-label="Compatible">${a.compatible || '-'}</td>
+                            <td data-label="Cantidad">${a.cantidad || 1}</td>
+                            <td data-label="Estado"><span class="badge badge-${a.estado === 'disponible' ? 'success' : a.estado === 'agotado' ? 'danger' : 'warning'}">${a.estado || '-'}</span></td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Equipos.editarAccesorio('${a.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Equipos.eliminarAccesorio('${a.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -1623,10 +1623,10 @@ Dronigest.Trabajos = {
                     ${trabajos.map(t => `
                         <tr>
                             <td><strong>${t.nombre}</strong><br><small style="color:var(--text-light)">${Dronigest.Utils.formatDate(t.fechaInicio)}</small></td>
-                            <td><span class="badge badge-info">${tipoLabels[t.tipo] || t.tipo}</span></td>
-                            <td>${t.cliente || '-'}</td>
-                            <td>${t.piloto || '-'}</td>
-                            <td><span class="badge badge-${t.estado === 'completado' ? 'success' : t.estado === 'en_curso' ? 'warning' : t.estado === 'cancelado' ? 'danger' : 'info'}">${t.estado || '-'}</span></td>
+                            <td data-label="Tipo"><span class="badge badge-info">${tipoLabels[t.tipo] || t.tipo}</span></td>
+                            <td data-label="Cliente">${t.cliente || '-'}</td>
+                            <td data-label="Piloto">${t.piloto || '-'}</td>
+                            <td data-label="Estado"><span class="badge badge-${t.estado === 'completado' ? 'success' : t.estado === 'en_curso' ? 'warning' : t.estado === 'cancelado' ? 'danger' : 'info'}">${t.estado || '-'}</span></td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Trabajos.editar('${t.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Trabajos.eliminar('${t.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -1791,11 +1791,11 @@ Dronigest.Inspecciones = {
                         ${items.map(i => `
                             <tr>
                                 <td><strong>${i.nombre}</strong><br><small class="badge badge-${tipoBadge[tipoKey] || 'info'}">${i.subtipo || tipoLabels[tipoKey]}</small></td>
-                                <td>${Dronigest.Utils.formatDate(i.fecha)}</td>
-                                <td>${i.cliente || '-'}</td>
-                                <td>${i.piloto || '-'}</td>
-                                <td>${i.numElementos || 0}</td>
-                                <td>${i.numAnomalias > 0 ? `<span style="color:var(--danger);font-weight:700;">${i.numAnomalias}</span>` : '0'}</td>
+                                <td data-label="Fecha">${Dronigest.Utils.formatDate(i.fecha)}</td>
+                                <td data-label="Cliente">${i.cliente || '-'}</td>
+                                <td data-label="Piloto">${i.piloto || '-'}</td>
+                                <td data-label="Elementos">${i.numElementos || 0}</td>
+                                <td data-label="Anomalías">${i.numAnomalias > 0 ? `<span style="color:var(--danger);font-weight:700;">${i.numAnomalias}</span>` : '0'}</td>
                                 <td class="actions">
                                     <button class="btn-action edit" onclick="Dronigest.Inspecciones.editar('${i.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                     <button class="btn-action delete" onclick="Dronigest.Inspecciones.eliminar('${i.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -1944,11 +1944,11 @@ Dronigest.Agricola = {
                     ${trabajos.map(t => `
                         <tr>
                             <td><strong>${t.nombre}</strong></td>
-                            <td><span class="badge badge-success">${tipoLabels[t.tipo] || t.tipo}</span></td>
-                            <td>${t.cultivo || '-'}</td>
-                            <td>${t.superficie ? t.superficie + ' ha' : '-'}</td>
-                            <td>${t.producto || '-'}</td>
-                            <td>${Dronigest.Utils.formatDate(t.fecha)}</td>
+                            <td data-label="Tipo"><span class="badge badge-success">${tipoLabels[t.tipo] || t.tipo}</span></td>
+                            <td data-label="Cultivo">${t.cultivo || '-'}</td>
+                            <td data-label="Superficie">${t.superficie ? t.superficie + ' ha' : '-'}</td>
+                            <td data-label="Producto">${t.producto || '-'}</td>
+                            <td data-label="Fecha">${Dronigest.Utils.formatDate(t.fecha)}</td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Agricola.editar('${t.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Agricola.eliminar('${t.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -2243,12 +2243,12 @@ Dronigest.Cinegetico = {
                     ${registros.map(r => `
                         <tr>
                             <td><strong>${r.nombre}</strong></td>
-                            <td><span class="badge badge-info">${tipoLabels[r.tipo] || r.tipo}</span></td>
-                            <td>${Dronigest.Utils.formatDate(r.fecha)} ${r.hora || ''}</td>
-                            <td><span class="badge badge-success">${r.especie || '-'}</span></td>
-                            <td><strong>${r.individuos || 0}</strong></td>
-                            <td>${r.zona || '-'}</td>
-                            <td>${r.amenaza && r.amenaza !== 'ninguna' ? `<span class="badge badge-danger">${amenazaLabels[r.amenaza] || r.amenaza}</span>` : '-'}</td>
+                            <td data-label="Tipo"><span class="badge badge-info">${tipoLabels[r.tipo] || r.tipo}</span></td>
+                            <td data-label="Fecha">${Dronigest.Utils.formatDate(r.fecha)} ${r.hora || ''}</td>
+                            <td data-label="Especie"><span class="badge badge-success">${r.especie || '-'}</span></td>
+                            <td data-label="Nº"><strong>${r.individuos || 0}</strong></td>
+                            <td data-label="Zona">${r.zona || '-'}</td>
+                            <td data-label="Amenaza">${r.amenaza && r.amenaza !== 'ninguna' ? `<span class="badge badge-danger">${amenazaLabels[r.amenaza] || r.amenaza}</span>` : '-'}</td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Cinegetico.editar('${r.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Cinegetico.eliminar('${r.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -2273,11 +2273,11 @@ Dronigest.Cinegetico = {
                     ${zonas.map(z => `
                         <tr>
                             <td><strong>${z.nombre}</strong></td>
-                            <td>${z.superficie ? z.superficie + ' ha' : '-'}</td>
-                            <td><span class="badge badge-info">${z.terreno || '-'}</span></td>
-                            <td>${z.especies || '-'}</td>
-                            <td><span class="badge badge-${z.estado === 'activa' ? 'success' : z.estado === 'protegida' ? 'warning' : 'info'}">${z.estado || '-'}</span></td>
-                            <td>${z.propietario || '-'}</td>
+                            <td data-label="Superficie">${z.superficie ? z.superficie + ' ha' : '-'}</td>
+                            <td data-label="Terreno"><span class="badge badge-info">${z.terreno || '-'}</span></td>
+                            <td data-label="Especies">${z.especies || '-'}</td>
+                            <td data-label="Estado"><span class="badge badge-${z.estado === 'activa' ? 'success' : z.estado === 'protegida' ? 'warning' : 'info'}">${z.estado || '-'}</span></td>
+                            <td data-label="Propietario">${z.propietario || '-'}</td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Cinegetico.editarZona('${z.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Cinegetico.eliminarZona('${z.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -2302,9 +2302,9 @@ Dronigest.Cinegetico = {
                     ${especies.map(e => `
                         <tr>
                             <td><strong>${e.nombre}</strong></td>
-                            <td><em>${e.nombreCientifico || '-'}</em></td>
-                            <td>${e.familia || '-'}</td>
-                            <td><span class="badge badge-${e.estado === 'comun' ? 'success' : e.estado === 'protegida' ? 'danger' : 'warning'}">${e.estado || '-'}</span></td>
+                            <td data-label="Nombre Científico"><em>${e.nombreCientifico || '-'}</em></td>
+                            <td data-label="Familia">${e.familia || '-'}</td>
+                            <td data-label="Estado"><span class="badge badge-${e.estado === 'comun' ? 'success' : e.estado === 'protegida' ? 'danger' : 'warning'}">${e.estado || '-'}</span></td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Cinegetico.editarEspecie('${e.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Cinegetico.eliminarEspecie('${e.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
