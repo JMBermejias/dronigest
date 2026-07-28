@@ -697,12 +697,35 @@ Dronigest.Pilotos = {
             tipo: 'piloto'
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce el nombre del piloto', 'warning'); return; }
-        Dronigest.DB.add('pilotos', data);
-        Dronigest.Toast.show('Piloto registrado', 'success');
-        Dronigest.DB.logActividad('piloto', 'Piloto registrado', data.nombre);
+        if (id) {
+            Dronigest.DB.update('pilotos', id, data);
+            Dronigest.Toast.show('Piloto actualizado', 'success');
+        } else {
+            Dronigest.DB.add('pilotos', data);
+            Dronigest.Toast.show('Piloto registrado', 'success');
+            Dronigest.DB.logActividad('piloto', 'Piloto registrado', data.nombre);
+        }
         Dronigest.Modal.cerrar();
         this.listarPilotos();
         Dronigest.Dashboard.actualizar();
+    },
+
+    editarPiloto(id) {
+        const p = Dronigest.DB.find('pilotos', id);
+        if (!p) return;
+        this.nuevoPiloto();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Piloto';
+            const keyMap = { pNombre:'nombre', pNif:'nif', pTelefono:'telefono', pEmail:'email',
+                pCertificacion:'certificacion', pCategoria:'categoria', pSeguro:'seguro', pNotas:'notas' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && p[dataKey] !== undefined && p[dataKey] !== null) el.value = p[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.Pilotos.guardarPiloto('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     eliminarPiloto(id) {
@@ -739,7 +762,7 @@ Dronigest.Pilotos = {
         `);
     },
 
-    guardarAuxiliar() {
+    guardarAuxiliar(id) {
         const data = {
             nombre: document.getElementById('aNombre').value,
             nif: document.getElementById('aNif').value,
@@ -750,11 +773,34 @@ Dronigest.Pilotos = {
             tipo: 'auxiliar'
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce el nombre del auxiliar', 'warning'); return; }
-        Dronigest.DB.add('auxiliares', data);
-        Dronigest.Toast.show('Auxiliar registrado', 'success');
-        Dronigest.DB.logActividad('piloto', 'Auxiliar registrado', data.nombre);
+        if (id) {
+            Dronigest.DB.update('auxiliares', id, data);
+            Dronigest.Toast.show('Auxiliar actualizado', 'success');
+        } else {
+            Dronigest.DB.add('auxiliares', data);
+            Dronigest.Toast.show('Auxiliar registrado', 'success');
+            Dronigest.DB.logActividad('piloto', 'Auxiliar registrado', data.nombre);
+        }
         Dronigest.Modal.cerrar();
         this.listarAuxiliares();
+    },
+
+    editarAuxiliar(id) {
+        const a = Dronigest.DB.find('auxiliares', id);
+        if (!a) return;
+        this.nuevoAuxiliar();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Auxiliar';
+            const keyMap = { aNombre:'nombre', aNif:'nif', aTelefono:'telefono', aEmail:'email',
+                aFuncion:'funcion', aNotas:'notas' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && a[dataKey] !== undefined && a[dataKey] !== null) el.value = a[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.Pilotos.guardarAuxiliar('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     eliminarAuxiliar(id) {
@@ -784,6 +830,7 @@ Dronigest.Pilotos = {
                             <td><span class="badge badge-info">${p.categoria || '-'}</span></td>
                             <td>${p.telefono || '-'}</td>
                             <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.Pilotos.editarPiloto('${p.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Pilotos.eliminarPiloto('${p.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -810,6 +857,7 @@ Dronigest.Pilotos = {
                             <td><span class="badge badge-info">${a.funcion || '-'}</span></td>
                             <td>${a.telefono || '-'}</td>
                             <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.Pilotos.editarAuxiliar('${a.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Pilotos.eliminarAuxiliar('${a.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -850,7 +898,7 @@ Dronigest.TiposVuelo = {
         `);
     },
 
-    guardar() {
+    guardar(id) {
         const data = {
             nombre: document.getElementById('tvNombre').value,
             categoria: document.getElementById('tvCategoria').value,
@@ -859,10 +907,33 @@ Dronigest.TiposVuelo = {
             distanciaMax: document.getElementById('tvDistMax').value
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre', 'warning'); return; }
-        Dronigest.DB.add('tiposVuelo', data);
-        Dronigest.Toast.show('Tipo de vuelo registrado', 'success');
+        if (id) {
+            Dronigest.DB.update('tiposVuelo', id, data);
+            Dronigest.Toast.show('Tipo de vuelo actualizado', 'success');
+        } else {
+            Dronigest.DB.add('tiposVuelo', data);
+            Dronigest.Toast.show('Tipo de vuelo registrado', 'success');
+        }
         Dronigest.Modal.cerrar();
         this.listar();
+    },
+
+    editar(id) {
+        const t = Dronigest.DB.find('tiposVuelo', id);
+        if (!t) return;
+        this.nuevo();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Tipo de Vuelo';
+            const keyMap = { tvNombre:'nombre', tvCategoria:'categoria', tvDesc:'descripcion',
+                tvAltMax:'altitudMax', tvDistMax:'distanciaMax' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && t[dataKey] !== undefined && t[dataKey] !== null) el.value = t[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.TiposVuelo.guardar('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     eliminar(id) {
@@ -885,17 +956,39 @@ Dronigest.TiposVuelo = {
         `);
     },
 
-    guardarCategoria() {
+    guardarCategoria(id) {
         const data = {
             nombre: document.getElementById('catNombre').value,
             codigo: document.getElementById('catCodigo').value,
             descripcion: document.getElementById('catDesc').value
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre', 'warning'); return; }
-        Dronigest.DB.add('categorias', data);
-        Dronigest.Toast.show('Categoría registrada', 'success');
+        if (id) {
+            Dronigest.DB.update('categorias', id, data);
+            Dronigest.Toast.show('Categoría actualizada', 'success');
+        } else {
+            Dronigest.DB.add('categorias', data);
+            Dronigest.Toast.show('Categoría registrada', 'success');
+        }
         Dronigest.Modal.cerrar();
         this.listarCategorias();
+    },
+
+    editarCategoria(id) {
+        const c = Dronigest.DB.find('categorias', id);
+        if (!c) return;
+        this.nuevaCategoria();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Categoría';
+            const keyMap = { catNombre:'nombre', catCodigo:'codigo', catDesc:'descripcion' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && c[dataKey] !== undefined && c[dataKey] !== null) el.value = c[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.TiposVuelo.guardarCategoria('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     eliminarCategoria(id) {
@@ -924,6 +1017,7 @@ Dronigest.TiposVuelo = {
                             <td>${t.altitudMax || '-'}m</td>
                             <td>${t.distanciaMax || '-'}m</td>
                             <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.TiposVuelo.editar('${t.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.TiposVuelo.eliminar('${t.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -949,6 +1043,7 @@ Dronigest.TiposVuelo = {
                             <td><span class="badge badge-info">${c.codigo || '-'}</span></td>
                             <td>${c.descripcion || '-'}</td>
                             <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.TiposVuelo.editarCategoria('${c.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.TiposVuelo.eliminarCategoria('${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -1080,7 +1175,7 @@ Dronigest.Equipos = {
         `);
     },
 
-    guardarDrone() {
+    guardarDrone(id) {
         const data = {
             nombre: document.getElementById('dNombre').value,
             modelo: document.getElementById('dModelo').value,
@@ -1092,12 +1187,35 @@ Dronigest.Equipos = {
             notas: document.getElementById('dNotas').value
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre', 'warning'); return; }
-        Dronigest.DB.add('drones', data);
-        Dronigest.Toast.show('Drone registrado', 'success');
-        Dronigest.DB.logActividad('drone', 'Drone registrado', data.nombre);
+        if (id) {
+            Dronigest.DB.update('drones', id, data);
+            Dronigest.Toast.show('Drone actualizado', 'success');
+        } else {
+            Dronigest.DB.add('drones', data);
+            Dronigest.Toast.show('Drone registrado', 'success');
+            Dronigest.DB.logActividad('drone', 'Drone registrado', data.nombre);
+        }
         Dronigest.Modal.cerrar();
         this.listarDrones();
         Dronigest.Dashboard.actualizar();
+    },
+
+    editarDrone(id) {
+        const d = Dronigest.DB.find('drones', id);
+        if (!d) return;
+        this.nuevoDrone();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Drone';
+            const keyMap = { dNombre:'nombre', dModelo:'modelo', dSerie:'serie', dCompra:'fechaCompra',
+                dHoras:'horasVuelo', dEstado:'estado', dRevision:'ultimaRevision', dNotas:'notas' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && d[dataKey] !== undefined && d[dataKey] !== null) el.value = d[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.Equipos.guardarDrone('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     eliminarDrone(id) {
@@ -1148,7 +1266,7 @@ Dronigest.Equipos = {
         `);
     },
 
-    guardarModelo() {
+    guardarModelo(id) {
         const data = {
             nombre: document.getElementById('mNombre').value,
             marca: document.getElementById('mMarca').value,
@@ -1160,10 +1278,33 @@ Dronigest.Equipos = {
             descripcion: document.getElementById('mDesc').value
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre', 'warning'); return; }
-        Dronigest.DB.add('modelos', data);
-        Dronigest.Toast.show('Modelo registrado', 'success');
+        if (id) {
+            Dronigest.DB.update('modelos', id, data);
+            Dronigest.Toast.show('Modelo actualizado', 'success');
+        } else {
+            Dronigest.DB.add('modelos', data);
+            Dronigest.Toast.show('Modelo registrado', 'success');
+        }
         Dronigest.Modal.cerrar();
         this.listarModelos();
+    },
+
+    editarModelo(id) {
+        const m = Dronigest.DB.find('modelos', id);
+        if (!m) return;
+        this.nuevoModelo();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Modelo';
+            const keyMap = { mNombre:'nombre', mMarca:'marca', mTipo:'tipo', mPeso:'peso',
+                mAutonomia:'autonomia', mCarga:'carga', mCategoria:'categoria', mDesc:'descripcion' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && m[dataKey] !== undefined && m[dataKey] !== null) el.value = m[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.Equipos.guardarModelo('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     eliminarModelo(id) {
@@ -1199,7 +1340,7 @@ Dronigest.Equipos = {
         `);
     },
 
-    guardarAccesorio() {
+    guardarAccesorio(id) {
         const data = {
             nombre: document.getElementById('accNombre').value,
             marca: document.getElementById('accMarca').value,
@@ -1209,10 +1350,33 @@ Dronigest.Equipos = {
             notas: document.getElementById('accNotas').value
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre', 'warning'); return; }
-        Dronigest.DB.add('accesorios', data);
-        Dronigest.Toast.show('Accesorio registrado', 'success');
+        if (id) {
+            Dronigest.DB.update('accesorios', id, data);
+            Dronigest.Toast.show('Accesorio actualizado', 'success');
+        } else {
+            Dronigest.DB.add('accesorios', data);
+            Dronigest.Toast.show('Accesorio registrado', 'success');
+        }
         Dronigest.Modal.cerrar();
         this.listarAccesorios();
+    },
+
+    editarAccesorio(id) {
+        const a = Dronigest.DB.find('accesorios', id);
+        if (!a) return;
+        this.nuevoAccesorio();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Accesorio';
+            const keyMap = { accNombre:'nombre', accMarca:'marca', accCompatible:'compatible',
+                accCantidad:'cantidad', accEstado:'estado', accNotas:'notas' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && a[dataKey] !== undefined && a[dataKey] !== null) el.value = a[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.Equipos.guardarAccesorio('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     eliminarAccesorio(id) {
@@ -1242,6 +1406,7 @@ Dronigest.Equipos = {
                             <td>${d.horasVuelo || 0}h</td>
                             <td><span class="badge badge-${d.estado === 'operativo' ? 'success' : d.estado === 'averiado' ? 'danger' : 'warning'}">${d.estado || '-'}</span></td>
                             <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.Equipos.editarDrone('${d.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Equipos.eliminarDrone('${d.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -1270,6 +1435,7 @@ Dronigest.Equipos = {
                             <td>${m.autonomia ? m.autonomia + 'min' : '-'}</td>
                             <td><span class="badge badge-info">${m.categoria || '-'}</span></td>
                             <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.Equipos.editarModelo('${m.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Equipos.eliminarModelo('${m.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -1297,6 +1463,7 @@ Dronigest.Equipos = {
                             <td>${a.cantidad || 1}</td>
                             <td><span class="badge badge-${a.estado === 'disponible' ? 'success' : a.estado === 'agotado' ? 'danger' : 'warning'}">${a.estado || '-'}</span></td>
                             <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.Equipos.editarAccesorio('${a.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Equipos.eliminarAccesorio('${a.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -1367,7 +1534,7 @@ Dronigest.Trabajos = {
         `);
     },
 
-    guardar() {
+    guardar(id) {
         const data = {
             nombre: document.getElementById('tNombre').value,
             tipo: document.getElementById('tTipo').value,
@@ -1382,12 +1549,36 @@ Dronigest.Trabajos = {
             presupuesto: document.getElementById('tPresupuesto').value
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre', 'warning'); return; }
-        Dronigest.DB.add('trabajos', data);
-        Dronigest.Toast.show('Trabajo registrado', 'success');
-        Dronigest.DB.logActividad('trabajo', 'Trabajo registrado', data.nombre);
+        if (id) {
+            Dronigest.DB.update('trabajos', id, data);
+            Dronigest.Toast.show('Trabajo actualizado', 'success');
+        } else {
+            Dronigest.DB.add('trabajos', data);
+            Dronigest.Toast.show('Trabajo registrado', 'success');
+            Dronigest.DB.logActividad('trabajo', 'Trabajo registrado', data.nombre);
+        }
         Dronigest.Modal.cerrar();
         this.listar();
         Dronigest.Dashboard.actualizar();
+    },
+
+    editar(id) {
+        const t = Dronigest.DB.find('trabajos', id);
+        if (!t) return;
+        this.nuevo();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Trabajo';
+            const keyMap = { tNombre:'nombre', tTipo:'tipo', tCliente:'cliente', tFechaInicio:'fechaInicio',
+                tFechaFin:'fechaFin', tPiloto:'piloto', tDrone:'drone', tUbicacion:'ubicacion',
+                tDesc:'descripcion', tEstado:'estado', tPresupuesto:'presupuesto' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && t[dataKey] !== undefined && t[dataKey] !== null) el.value = t[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.Trabajos.guardar('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     eliminar(id) {
@@ -1424,6 +1615,7 @@ Dronigest.Trabajos = {
                             <td>${t.piloto || '-'}</td>
                             <td><span class="badge badge-${t.estado === 'completado' ? 'success' : t.estado === 'en_curso' ? 'warning' : t.estado === 'cancelado' ? 'danger' : 'info'}">${t.estado || '-'}</span></td>
                             <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.Trabajos.editar('${t.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Trabajos.eliminar('${t.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -1512,7 +1704,7 @@ Dronigest.Inspecciones = {
         `);
     },
 
-    guardar() {
+    guardar(id) {
         const data = {
             nombre: document.getElementById('iNombre').value,
             tipo: document.getElementById('iTipo').value,
@@ -1526,11 +1718,35 @@ Dronigest.Inspecciones = {
             observaciones: document.getElementById('iObs').value
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre', 'warning'); return; }
-        Dronigest.DB.add('inspecciones', data);
-        Dronigest.Toast.show('Inspección registrada', 'success');
-        Dronigest.DB.logActividad('inspeccion', 'Inspección registrada', data.nombre);
+        if (id) {
+            Dronigest.DB.update('inspecciones', id, data);
+            Dronigest.Toast.show('Inspección actualizada', 'success');
+        } else {
+            Dronigest.DB.add('inspecciones', data);
+            Dronigest.Toast.show('Inspección registrada', 'success');
+            Dronigest.DB.logActividad('inspeccion', 'Inspección registrada', data.nombre);
+        }
         Dronigest.Modal.cerrar();
         this.listar();
+    },
+
+    editar(id) {
+        const i = Dronigest.DB.find('inspecciones', id);
+        if (!i) return;
+        this.nueva();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Inspección';
+            const keyMap = { iNombre:'nombre', iTipo:'tipo', iCliente:'cliente', iFecha:'fecha',
+                iPiloto:'piloto', iUbicacion:'ubicacion', iElementos:'numElementos',
+                iAnomalias:'numAnomalias', iSubtipo:'subtipo', iObs:'observaciones' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && i[dataKey] !== undefined && i[dataKey] !== null) el.value = i[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.Inspecciones.guardar('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     eliminar(id) {
@@ -1568,6 +1784,7 @@ Dronigest.Inspecciones = {
                                 <td>${i.numElementos || 0}</td>
                                 <td>${i.numAnomalias > 0 ? `<span style="color:var(--danger);font-weight:700;">${i.numAnomalias}</span>` : '0'}</td>
                                 <td class="actions">
+                                    <button class="btn-action edit" onclick="Dronigest.Inspecciones.editar('${i.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                     <button class="btn-action delete" onclick="Dronigest.Inspecciones.eliminar('${i.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                                 </td>
                             </tr>
@@ -1640,7 +1857,7 @@ Dronigest.Agricola = {
         `);
     },
 
-    guardar() {
+    guardar(id) {
         const data = {
             nombre: document.getElementById('agNombre').value,
             tipo: document.getElementById('agTipo').value,
@@ -1655,11 +1872,35 @@ Dronigest.Agricola = {
             observaciones: document.getElementById('agObs').value
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre', 'warning'); return; }
-        Dronigest.DB.add('agricola', data);
-        Dronigest.Toast.show('Trabajo agrícola registrado', 'success');
-        Dronigest.DB.logActividad('agricola', 'Trabajo agrícola registrado', data.nombre);
+        if (id) {
+            Dronigest.DB.update('agricola', id, data);
+            Dronigest.Toast.show('Trabajo agrícola actualizado', 'success');
+        } else {
+            Dronigest.DB.add('agricola', data);
+            Dronigest.Toast.show('Trabajo agrícola registrado', 'success');
+            Dronigest.DB.logActividad('agricola', 'Trabajo agrícola registrado', data.nombre);
+        }
         Dronigest.Modal.cerrar();
         this.listar();
+    },
+
+    editar(id) {
+        const t = Dronigest.DB.find('agricola', id);
+        if (!t) return;
+        this.nuevo();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Trabajo Agrícola';
+            const keyMap = { agNombre:'nombre', agTipo:'tipo', agCultivo:'cultivo', agSuperficie:'superficie',
+                agFecha:'fecha', agProducto:'producto', agDosis:'dosis', agPiloto:'piloto',
+                agDrone:'drone', agTerreno:'terreno', agObs:'observaciones' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && t[dataKey] !== undefined && t[dataKey] !== null) el.value = t[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.Agricola.guardar('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     eliminar(id) {
@@ -1696,6 +1937,7 @@ Dronigest.Agricola = {
                             <td>${t.producto || '-'}</td>
                             <td>${Dronigest.Utils.formatDate(t.fecha)}</td>
                             <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.Agricola.editar('${t.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Agricola.eliminar('${t.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -1817,7 +2059,7 @@ Dronigest.Cinegetico = {
         `);
     },
 
-    guardar() {
+    guardar(id) {
         const data = {
             nombre: document.getElementById('cgNombre').value,
             tipo: document.getElementById('cgTipo').value,
@@ -1835,12 +2077,37 @@ Dronigest.Cinegetico = {
             observaciones: document.getElementById('cgObs').value
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre para el registro', 'warning'); return; }
-        Dronigest.DB.add('cinegetico', data);
-        Dronigest.Toast.show('Registro de control cinegetico guardado', 'success');
-        Dronigest.DB.logActividad('cinegetico', 'Control cinegetico registrado', data.nombre);
+        if (id) {
+            Dronigest.DB.update('cinegetico', id, data);
+            Dronigest.Toast.show('Registro de control actualizado', 'success');
+        } else {
+            Dronigest.DB.add('cinegetico', data);
+            Dronigest.Toast.show('Registro de control cinegetico guardado', 'success');
+            Dronigest.DB.logActividad('cinegetico', 'Control cinegetico registrado', data.nombre);
+        }
         Dronigest.Modal.cerrar();
         this.listar();
         Dronigest.Dashboard.actualizar();
+    },
+
+    editar(id) {
+        const r = Dronigest.DB.find('cinegetico', id);
+        if (!r) return;
+        this.nuevo();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Registro de Control';
+            const keyMap = { cgNombre:'nombre', cgTipo:'tipo', cgZona:'zona', cgFecha:'fecha',
+                cgHora:'hora', cgPiloto:'piloto', cgDrone:'drone', cgEspecie:'especie',
+                cgIndividuos:'individuos', cgLat:'lat', cgLng:'lng', cgEstadoAnimal:'estadoAnimal',
+                cgAmenaza:'amenaza', cgObs:'observaciones' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && r[dataKey] !== undefined && r[dataKey] !== null) el.value = r[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.Cinegetico.guardar('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     eliminar(id) {
@@ -1888,7 +2155,7 @@ Dronigest.Cinegetico = {
         `);
     },
 
-    guardarZona() {
+    guardarZona(id) {
         const data = {
             nombre: document.getElementById('zcNombre').value,
             superficie: parseFloat(document.getElementById('zcSuperficie').value) || 0,
@@ -1900,10 +2167,34 @@ Dronigest.Cinegetico = {
             notas: document.getElementById('zcNotas').value
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce un nombre para la zona', 'warning'); return; }
-        Dronigest.DB.add('zonasCineg', data);
-        Dronigest.Toast.show('Zona cinegetica registrada', 'success');
+        if (id) {
+            Dronigest.DB.update('zonasCineg', id, data);
+            Dronigest.Toast.show('Zona cinegetica actualizada', 'success');
+        } else {
+            Dronigest.DB.add('zonasCineg', data);
+            Dronigest.Toast.show('Zona cinegetica registrada', 'success');
+        }
         Dronigest.Modal.cerrar();
         this.listarZonas();
+    },
+
+    editarZona(id) {
+        const z = Dronigest.DB.find('zonasCineg', id);
+        if (!z) return;
+        this.nuevaZona();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Zona Cinegetica';
+            const keyMap = { zcNombre:'nombre', zcSuperficie:'superficie', zcTerreno:'terreno',
+                zcEspecies:'especies', zcEstado:'estado', zcPropietario:'propietario',
+                zcRestricciones:'restricciones', zcNotas:'notas' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && z[dataKey] !== undefined && z[dataKey] !== null) el.value = z[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.Cinegetico.guardarZona('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     eliminarZona(id) {
@@ -1946,6 +2237,7 @@ Dronigest.Cinegetico = {
                             <td>${r.zona || '-'}</td>
                             <td>${r.amenaza && r.amenaza !== 'ninguna' ? `<span class="badge badge-danger">${amenazaLabels[r.amenaza] || r.amenaza}</span>` : '-'}</td>
                             <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.Cinegetico.editar('${r.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Cinegetico.eliminar('${r.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -1974,6 +2266,7 @@ Dronigest.Cinegetico = {
                             <td><span class="badge badge-${z.estado === 'activa' ? 'success' : z.estado === 'protegida' ? 'warning' : 'info'}">${z.estado || '-'}</span></td>
                             <td>${z.propietario || '-'}</td>
                             <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.Cinegetico.editarZona('${z.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Cinegetico.eliminarZona('${z.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -2000,6 +2293,7 @@ Dronigest.Cinegetico = {
                             <td>${e.familia || '-'}</td>
                             <td><span class="badge badge-${e.estado === 'comun' ? 'success' : e.estado === 'protegida' ? 'danger' : 'warning'}">${e.estado || '-'}</span></td>
                             <td class="actions">
+                                <button class="btn-action edit" onclick="Dronigest.Cinegetico.editarEspecie('${e.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Cinegetico.eliminarEspecie('${e.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -2014,6 +2308,71 @@ Dronigest.Cinegetico = {
             Dronigest.Toast.show('Especie eliminada', 'info');
             this.listarEspecies();
         }
+    },
+
+    nuevaEspecie() {
+        const body = `
+            <div class="form-group"><label>Nombre común</label><input type="text" id="ecNombre" class="form-control" placeholder="Ej: Jabalí"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Nombre científico</label><input type="text" id="ecCientifico" class="form-control" placeholder="Ej: Sus scrofa"></div>
+                <div class="form-group"><label>Familia</label><input type="text" id="ecFamilia" class="form-control" placeholder="Ej: Suidae"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Estado de conservación</label>
+                    <select id="ecEstado" class="form-control">
+                        <option value="comun">Común</option>
+                        <option value="protegida">Protegida</option>
+                        <option value="en_peligro">En peligro</option>
+                        <option value="vulnerable">Vulnerable</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Hábitat</label><input type="text" id="ecHabitat" class="form-control" placeholder="Ej: Monte mediterráneo"></div>
+            </div>
+            <div class="form-group"><label>Descripción / Notas</label><textarea id="ecNotas" class="form-control" placeholder="Características, comportamiento..."></textarea></div>
+        `;
+        Dronigest.Modal.show('<i class="fas fa-paw"></i> Nueva Especie', body, `
+            <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+            <button class="btn-primary" onclick="Dronigest.Cinegetico.guardarEspecie()"><i class="fas fa-save"></i> Guardar</button>
+        `);
+    },
+
+    guardarEspecie(id) {
+        const data = {
+            nombre: document.getElementById('ecNombre').value,
+            nombreCientifico: document.getElementById('ecCientifico').value,
+            familia: document.getElementById('ecFamilia').value,
+            estado: document.getElementById('ecEstado').value,
+            habitat: document.getElementById('ecHabitat').value,
+            descripcion: document.getElementById('ecNotas').value
+        };
+        if (!data.nombre) { Dronigest.Toast.show('Introduce el nombre de la especie', 'warning'); return; }
+        if (id) {
+            Dronigest.DB.update('especiesCineg', id, data);
+            Dronigest.Toast.show('Especie actualizada', 'success');
+        } else {
+            Dronigest.DB.add('especiesCineg', data);
+            Dronigest.Toast.show('Especie registrada', 'success');
+        }
+        Dronigest.Modal.cerrar();
+        this.listarEspecies();
+    },
+
+    editarEspecie(id) {
+        const e = Dronigest.DB.find('especiesCineg', id);
+        if (!e) return;
+        this.nuevaEspecie();
+        setTimeout(() => {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Especie';
+            const keyMap = { ecNombre:'nombre', ecCientifico:'nombreCientifico', ecFamilia:'familia',
+                ecEstado:'estado', ecHabitat:'habitat', ecNotas:'descripcion' };
+            Object.entries(keyMap).forEach(([elId, dataKey]) => {
+                const el = document.getElementById(elId);
+                if (el && e[dataKey] !== undefined && e[dataKey] !== null) el.value = e[dataKey];
+            });
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+                <button class="btn-primary" onclick="Dronigest.Cinegetico.guardarEspecie('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
+        }, 100);
     },
 
     actualizarEstadisticas() {
