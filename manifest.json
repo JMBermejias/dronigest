@@ -2,13 +2,13 @@
     "name": "Dronigest - Gestion de Drones",
     "short_name": "Dronigest",
     "description": "Aplicacion integral para gestion de actividades de drones: vuelos, pilotos, equipos, inspecciones, meteorologia y mas.",
-    "start_url": "./index.html",
+    "start_url": "https://jmbermejias.github.io/dronigest/index.html",
     "display": "standalone",
     "display_override": ["standalone", "fullscreen", "minimal-ui"],
     "background_color": "#E1F5FE",
     "theme_color": "#0288D1",
     "orientation": "any",
-    "scope": "./",
+    "scope": "/dronigest/",
     "lang": "es",
     "dir": "ltr",
     "id": "/",
@@ -50,19 +50,19 @@
         {
             "name": "Nuevo Vuelo",
             "short_name": "Vuelo",
-            "url": "./index.html?page=vuelos",
+            "url": "https://jmbermejias.github.io/dronigest/index.html?page=vuelos",
             "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]
         },
         {
             "name": "Checklists",
             "short_name": "Checks",
-            "url": "./index.html?page=checklists",
+            "url": "https://jmbermejias.github.io/dronigest/index.html?page=checklists",
             "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]
         },
         {
             "name": "Meteorologia",
             "short_name": "Meteo",
-            "url": "./index.html?page=meteorologia",
+            "url": "https://jmbermejias.github.io/dronigest/index.html?page=meteorologia",
             "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}]
         }
     ]
