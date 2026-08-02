@@ -257,34 +257,133 @@ Dronigest.Toast = {
 };
 
 /* ===== GEOLOCATION ===== */
+const LOCATION_CACHE_KEY = 'dronigest_last_location';
+const MANUAL_LOCATION_KEY = 'dronigest_manual_location';
+
 Dronigest.Geolocation = {
+    cityName: '',
+
     init() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                pos => {
-                    Dronigest.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    this.reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-                },
-                () => {
-                    Dronigest.userLocation = { lat: 40.4168, lng: -3.7038 };
-                    document.querySelector('#locationInfo span').textContent = 'Madrid (por defecto)';
-                },
-                { enableHighAccuracy: true }
-            );
-        } else {
-            Dronigest.userLocation = { lat: 40.4168, lng: -3.7038 };
+        const saved = localStorage.getItem(LOCATION_CACHE_KEY);
+        if (saved) {
+            try {
+                Dronigest.userLocation = JSON.parse(saved);
+            } catch {}
         }
+        const savedCity = localStorage.getItem('dronigest_city_name');
+        if (savedCity) {
+            try { this.cityName = savedCity; } catch {}
+        }
+        const el = document.querySelector('#locationInfo span');
+        if (el) {
+            el.style.cursor = 'pointer';
+            el.onclick = () => this.showCitySearch();
+            if (this.cityName) el.textContent = this.cityName;
+        }
+        this.refreshLocation();
     },
 
-    async reverseGeocode(lat, lng) {
+    async refreshLocation(forceAuto = false) {
+        const manual = localStorage.getItem(MANUAL_LOCATION_KEY);
+        if (manual && !forceAuto) {
+            try { Dronigest.userLocation = JSON.parse(manual); return Dronigest.userLocation; } catch {}
+        }
+        let loc = null;
+        try {
+            if (window.electronAPI && window.electronAPI.getLocation) {
+                loc = await window.electronAPI.getLocation();
+            }
+        } catch {}
+        if (!loc && navigator.geolocation) {
+            try {
+                loc = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(
+                        p => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+                        reject,
+                        { enableHighAccuracy: false, timeout: 8000 }
+                    );
+                });
+            } catch {}
+        }
+        if (!loc) {
+            try {
+                const r = await fetch('https://ipwho.is/');
+                const d = await r.json();
+                if (d.success) loc = { lat: d.latitude, lng: d.longitude, city: d.city };
+            } catch {}
+        }
+        if (loc) {
+            Dronigest.userLocation = loc;
+            localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(loc));
+            await this.reverseGeocode(loc.lat, loc.lng, loc.city);
+            return loc;
+        }
+        if (!Dronigest.userLocation) Dronigest.userLocation = { lat: 40.4168, lng: -3.7038 };
+        await this.reverseGeocode(Dronigest.userLocation.lat, Dronigest.userLocation.lng);
+        return Dronigest.userLocation;
+    },
+
+    async setCityByName(name) {
+        try {
+            const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=1&accept-language=es`);
+            const data = await r.json();
+            if (data.length) {
+                const loc = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+                Dronigest.userLocation = loc;
+                localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(loc));
+                localStorage.setItem(MANUAL_LOCATION_KEY, JSON.stringify(loc));
+                await this.reverseGeocode(loc.lat, loc.lng);
+                Dronigest.Toast.show('Ubicación establecida: ' + data[0].display_name.split(',')[0], 'success');
+                return loc;
+            }
+            Dronigest.Toast.show('Ciudad no encontrada.', 'warning');
+        } catch {
+            Dronigest.Toast.show('Error al buscar la ciudad.', 'warning');
+        }
+        return null;
+    },
+
+    showCitySearch() {
+        const existing = document.getElementById('citySearchOverlay');
+        if (existing) existing.remove();
+        const overlay = document.createElement('div');
+        overlay.id = 'citySearchOverlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+        overlay.innerHTML = `<div style="background:#1a1a2e;border-radius:12px;padding:24px;width:90%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+            <h3 style="margin:0 0 12px;color:#fff">Establecer ubicación</h3>
+            <input id="citySearchInput" type="text" placeholder="Escribe tu ciudad..." style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#16213e;color:#fff;font-size:14px;box-sizing:border-box">
+            <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+                <button id="citySearchCancel" style="padding:8px 20px;border-radius:8px;border:none;background:#333;color:#fff;cursor:pointer">Cancelar</button>
+                <button id="citySearchApply" style="padding:8px 20px;border-radius:8px;border:none;background:#e94560;color:#fff;cursor:pointer">Buscar</button>
+            </div>
+        </div>`;
+        document.body.appendChild(overlay);
+        const input = document.getElementById('citySearchInput');
+        document.getElementById('citySearchCancel').onclick = () => overlay.remove();
+        document.getElementById('citySearchApply').onclick = async () => {
+            if (!input.value.trim()) return;
+            overlay.remove();
+            await this.setCityByName(input.value.trim());
+        };
+        input.addEventListener('keydown', async e => { if (e.key === 'Enter') { overlay.remove(); await this.setCityByName(input.value.trim()); } });
+        setTimeout(() => input.focus(), 100);
+    },
+
+    async reverseGeocode(lat, lng, fallbackCity) {
         try {
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=es`);
             const data = await res.json();
             const city = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || '';
             const prov = data.address?.state || data.address?.province || '';
-            document.querySelector('#locationInfo span').textContent = city ? `${city}, ${prov}` : `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            this.cityName = city || fallbackCity || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            localStorage.setItem('dronigest_city_name', this.cityName);
+            const el = document.querySelector('#locationInfo span');
+            if (el) el.textContent = city && prov ? `${city}, ${prov}` : this.cityName;
         } catch {
-            document.querySelector('#locationInfo span').textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            this.cityName = fallbackCity || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            localStorage.setItem('dronigest_city_name', this.cityName);
+            const el = document.querySelector('#locationInfo span');
+            if (el) el.textContent = this.cityName;
         }
     }
 };
@@ -369,7 +468,8 @@ Dronigest.Utils = {
 
 /* ===== VUELOS ===== */
 Dronigest.Vuelos = {
-    nuevo() {
+    async nuevo() {
+        await Dronigest.Geolocation.refreshLocation();
         const pilotos = Dronigest.DB.get('pilotos');
         const drones = Dronigest.DB.get('drones');
         const tipos = Dronigest.DB.get('tiposVuelo');
@@ -1908,7 +2008,8 @@ Dronigest.Cinegetico = {
         if (tab === 'estadisticas') this.actualizarEstadisticas();
     },
 
-    nuevo() {
+    async nuevo() {
+        await Dronigest.Geolocation.refreshLocation();
         const zonas = Dronigest.DB.get('zonasCineg');
         const especies = Dronigest.DB.get('especiesCineg');
         const body = `
@@ -2371,13 +2472,14 @@ Dronigest.Cinegetico = {
 Dronigest.Meteo = {
     init() {
         const btn = document.getElementById('btnWeather');
-        if (btn) btn.onclick = () => { Dronigest.Navigation.goTo('meteorologia'); this.obtenerMeteorologia(); };
+        if (btn) btn.onclick = () => { Dronigest.Navigation.goTo('meteorologia'); };
         const btnGeo = document.getElementById('btnGeolocate');
-        if (btnGeo) btnGeo.onclick = () => {
+        if (btnGeo) btnGeo.onclick = async () => {
+            Dronigest.Toast.show('Detectando ubicación...', 'info');
+            await Dronigest.Geolocation.refreshLocation(true);
             if (Dronigest.userLocation) {
-                Dronigest.Toast.show(`Ubicación: ${Dronigest.userLocation.lat.toFixed(4)}, ${Dronigest.userLocation.lng.toFixed(4)}`, 'info');
-            } else {
-                Dronigest.Toast.show('Obteniendo ubicación...', 'info');
+                localStorage.removeItem('dronigest_manual_location');
+                Dronigest.Toast.show(`Ubicación actualizada`, 'success');
             }
         };
 
@@ -2387,11 +2489,17 @@ Dronigest.Meteo = {
     async cargarDashboard() {
         const container = document.getElementById('dashboardWeather');
         if (!container) return;
+        await Dronigest.Geolocation.refreshLocation();
         const loc = Dronigest.userLocation || { lat: 40.4168, lng: -3.7038 };
+        const cityName = Dronigest.Geolocation.cityName || `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`;
+        container.innerHTML = `
+            <div class="weather-location"><i class="fas fa-map-marker-alt"></i> ${cityName}</div>
+            <div class="weather-loading"><i class="fas fa-spinner fa-spin"></i><p>Cargando meteorología...</p></div>`;
         try {
             const data = await this.fetchWeather(loc.lat, loc.lng);
             const c = data.current;
             container.innerHTML = `
+                <div class="weather-location"><i class="fas fa-map-marker-alt"></i> ${cityName}</div>
                 <div style="display:flex;align-items:center;gap:1rem;">
                     <i class="fas ${c.icon}" style="font-size:2.5rem;color:#0288D1;"></i>
                     <div>
@@ -2406,11 +2514,14 @@ Dronigest.Meteo = {
                     <div><i class="fas fa-cloud-rain" style="color:#0288D1;"></i> Precip: ${c.precip} mm</div>
                 </div>`;
         } catch {
-            container.innerHTML = '<p class="empty-state">No se pudieron cargar datos meteorológicos</p>';
+            container.innerHTML = `
+                <div class="weather-location"><i class="fas fa-map-marker-alt"></i> ${cityName}</div>
+                <p class="empty-state">No se pudieron cargar datos meteorológicos</p>`;
         }
     },
 
     async obtenerMeteorologia() {
+        await Dronigest.Geolocation.refreshLocation();
         const loc = Dronigest.userLocation || { lat: 40.4168, lng: -3.7038 };
 
         const container = document.getElementById('meteoActual');
@@ -2514,7 +2625,7 @@ Dronigest.Meteo = {
         const c = data.current;
         document.getElementById('meteoActual').innerHTML = `
             <div class="weather-current">
-                <div class="location"><i class="fas fa-map-marker-alt"></i> Ubicación actual</div>
+                <div class="location"><i class="fas fa-map-marker-alt"></i> ${Dronigest.Geolocation.cityName || 'Ubicación actual'}</div>
                 <div style="display:flex;align-items:center;gap:1.5rem;margin-top:1rem;">
                     <i class="fas ${c.icon}" style="font-size:3.5rem;"></i>
                     <div>
