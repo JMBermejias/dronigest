@@ -2,6 +2,7 @@
     "name": "Dronigest - Gestion de Drones",
     "short_name": "Dronigest",
     "description": "Aplicacion integral para gestion de actividades de drones: vuelos, pilotos, equipos, inspecciones, meteorologia y mas.",
+    "version": "1.1.0",
     "start_url": "https://jmbermejias.github.io/dronigest/index.html",
     "display": "standalone",
     "display_override": ["standalone", "fullscreen", "minimal-ui"],
