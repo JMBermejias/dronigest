@@ -1885,3 +1885,51 @@ textarea.form-control {
     body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; }
     .no-print { display: none !important; }
 }
+
+/* ===== Sincronizacion ===== */
+.form-group {
+    margin-bottom: 18px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--text, #333);
+}
+.form-text {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #888;
+}
+.text-muted {
+    color: #666;
+    margin-bottom: 18px;
+}
+.sync-status {
+    margin-bottom: 20px;
+}
+.sync-status-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 18px;
+}
+.sync-status-item.online {
+    background: #e6f4ea;
+    color: #137333;
+    border: 1px solid #a8d5ba;
+}
+.sync-status-item.offline {
+    background: #fce8e6;
+    color: #c5221f;
+    border: 1px solid #f4b3ae;
+}
+.sync-status-item.checking {
+    background: #fef7e0;
+    color: #b06000;
+    border: 1px solid #fadb7e;
+}

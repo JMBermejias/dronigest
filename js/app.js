@@ -105,7 +105,23 @@ const Dronigest = {
 };
 
 /* ===== DATABASE ===== */
+/*
+ * Dronigest.DB - Acceso a datos con sincronizacion en la nube.
+ *
+ * La app mantiene un cache en memoria ([] por defecto) y, cuando hay backend
+ * configurado, sincroniza con el servidor REST. Si el backend no esta
+ * disponible, la app funciona con datos locales (localStorage) como fallback.
+ *
+ * Configuracion (constantes, ver configuración al final de this block):
+ *   DRONIGEST_API_URL - URL del backend REST (ej: https://mi-backend.com)
+ *   DRONIGEST_API_TOKEN - Token opcional de autenticacion
+ */
 Dronigest.DB = {
+    _cache: {},
+    _ready: false,
+    _online: false,
+    _pending: {},
+
     init() {
         const defaults = {
             vuelos: [], pilotos: [], auxiliares: [], tiposVuelo: [],
@@ -114,10 +130,9 @@ Dronigest.DB = {
             cinegetico: [], zonasCineg: [], especiesCineg: [],
             actividad: [], categoriasAesa: []
         };
+        // Inicializa el cache desde localStorage (fallback offline)
         Object.keys(defaults).forEach(k => {
-            if (!localStorage.getItem('dronigest_' + k)) {
-                localStorage.setItem('dronigest_' + k, JSON.stringify(defaults[k]));
-            }
+            this._cache[k] = JSON.parse(localStorage.getItem('dronigest_' + k) || 'null') || defaults[k];
         });
         if (this.get('categoriasAesa').length === 0) {
             const now = Date.now().toString(36);
@@ -127,44 +142,195 @@ Dronigest.DB = {
                 { id: now + 'c', nombre: 'STS', descripcion: 'STS Categoría específica' }
             ]);
         }
+        // Si hay backend configurado, intenta cargar los datos de la nube
+        if (this._apiUrl()) {
+            this._syncFromCloud();
+        }
+        return this;
     },
+
+    _apiUrl() {
+        return window.DRONIGEST_API_URL || localStorage.getItem('dronigest_api_url') || '';
+    },
+
+    _apiToken() {
+        return window.DRONIGEST_API_TOKEN || localStorage.getItem('dronigest_api_token') || '';
+    },
+
+    _apiHeaders() {
+        const headers = { 'Content-Type': 'application/json' };
+        const token = this._apiToken();
+        if (token) headers['x-api-token'] = token;
+        return headers;
+    },
+
+    async _request(method, url, body) {
+        const opts = { method, headers: this._apiHeaders() };
+        if (body !== undefined) opts.body = JSON.stringify(body);
+        const res = await fetch(url, opts);
+        if (!res.ok) throw new Error('API error ' + res.status);
+        return res.json();
+    },
+
+    _emitChange() {
+        document.dispatchEvent(new CustomEvent('dronigest:data', { detail: {} }));
+    },
+
+    async _syncFromCloud() {
+        const base = this._apiUrl().replace(/\/$/, '');
+        try {
+            const all = await this._request('GET', base + '/api/data');
+            Object.keys(all).forEach(k => {
+                if (Array.isArray(all[k])) this._cache[k] = all[k];
+            });
+            this._online = true;
+            this._persistLocal();
+            this._emitChange();
+            if (window.Dronigest && Dronigest.Toast) {
+                Dronigest.Toast.show('Datos sincronizados con la nube', 'success');
+            }
+        } catch (e) {
+            this._online = false;
+        }
+        this._ready = true;
+    },
+
+    _persistLocal() {
+        Object.keys(this._cache).forEach(k => {
+            localStorage.setItem('dronigest_' + k, JSON.stringify(this._cache[k]));
+        });
+    },
+
     get(key) {
-        try { return JSON.parse(localStorage.getItem('dronigest_' + key)) || []; }
-        catch { return []; }
+        return this._cache[key] || [];
     },
+
     set(key, data) {
+        this._cache[key] = data;
         localStorage.setItem('dronigest_' + key, JSON.stringify(data));
+        if (this._apiUrl()) {
+            const base = this._apiUrl().replace(/\/$/, '');
+            this._request('PUT', base + '/api/data/' + key, data).catch(() => {});
+        }
+        this._emitChange();
     },
+
     add(key, item) {
-        const data = this.get(key);
-        item.id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-        item.creado = new Date().toISOString();
+        const data = (this._cache[key] || []).slice();
+        item.id = item.id || (Date.now().toString(36) + Math.random().toString(36).substr(2, 5));
+        item.creado = item.creado || new Date().toISOString();
         data.push(item);
-        this.set(key, data);
+        this._cache[key] = data;
+        localStorage.setItem('dronigest_' + key, JSON.stringify(data));
+        if (this._apiUrl()) {
+            const base = this._apiUrl().replace(/\/$/, '');
+            this._request('POST', base + '/api/data/' + key, item).catch(() => {});
+        }
+        this._emitChange();
         return item;
     },
+
     update(key, id, updates) {
-        const data = this.get(key);
+        const data = (this._cache[key] || []).slice();
         const idx = data.findIndex(i => i.id === id);
         if (idx >= 0) {
             data[idx] = { ...data[idx], ...updates, modificado: new Date().toISOString() };
-            this.set(key, data);
+            this._cache[key] = data;
+            localStorage.setItem('dronigest_' + key, JSON.stringify(data));
+            if (this._apiUrl()) {
+                const base = this._apiUrl().replace(/\/$/, '');
+                this._request('PUT', base + '/api/data/' + key + '/' + id, data[idx]).catch(() => {});
+            }
+            this._emitChange();
             return data[idx];
         }
         return null;
     },
+
     remove(key, id) {
-        const data = this.get(key).filter(i => i.id !== id);
-        this.set(key, data);
+        const data = (this._cache[key] || []).filter(i => i.id !== id);
+        this._cache[key] = data;
+        localStorage.setItem('dronigest_' + key, JSON.stringify(data));
+        if (this._apiUrl()) {
+            const base = this._apiUrl().replace(/\/$/, '');
+            this._request('DELETE', base + '/api/data/' + key + '/' + id).catch(() => {});
+        }
+        this._emitChange();
     },
+
     find(key, id) {
-        return this.get(key).find(i => i.id === id) || null;
+        return (this._cache[key] || []).find(i => i.id === id) || null;
     },
+
     logActividad(tipo, titulo, detalle) {
-        const act = this.get('actividad');
+        const act = (this._cache['actividad'] || []).slice();
         act.unshift({ tipo, titulo, detalle, fecha: new Date().toISOString() });
         if (act.length > 50) act.length = 50;
-        this.set('actividad', act);
+        this._cache['actividad'] = act;
+        localStorage.setItem('dronigest_actividad', JSON.stringify(act));
+        if (this._apiUrl()) {
+            const base = this._apiUrl().replace(/\/$/, '');
+            this._request('PUT', base + '/api/data/actividad', act).catch(() => {});
+        }
+    }
+};
+
+/* ===== SYNC (configuracion del backend) ===== */
+Dronigest.Sync = {
+    mostrar() {
+        const urlEl = document.getElementById('syncApiUrl');
+        const tokenEl = document.getElementById('syncApiToken');
+        if (urlEl) urlEl.value = localStorage.getItem('dronigest_api_url') || '';
+        if (tokenEl) tokenEl.value = localStorage.getItem('dronigest_api_token') || '';
+        this.verificar();
+    },
+
+    guardar() {
+        const url = (document.getElementById('syncApiUrl').value || '').trim().replace(/\/+$/, '');
+        const token = (document.getElementById('syncApiToken').value || '').trim();
+        localStorage.setItem('dronigest_api_url', url);
+        if (token) localStorage.setItem('dronigest_api_token', token);
+        else localStorage.removeItem('dronigest_api_token');
+        if (url) {
+            Dronigest.DB._syncFromCloud().finally(() => {
+                this.verificar();
+            });
+        } else {
+            this.verificar();
+        }
+    },
+
+    desconectar() {
+        localStorage.removeItem('dronigest_api_url');
+        localStorage.removeItem('dronigest_api_token');
+        if (window.Dronigest && Dronigest.Toast) {
+            Dronigest.Toast.show('Backend desconectado. Datos locales.', 'info');
+        }
+        this.verificar();
+    },
+
+    async verificar() {
+        const url = localStorage.getItem('dronigest_api_url') || '';
+        const statusEl = document.getElementById('syncStatus');
+        if (!statusEl) return;
+        if (!url) {
+            statusEl.innerHTML = '<div class="sync-status-item offline"><i class="fas fa-plug"></i> Sin backend configurado. Los datos se guardan solo en este dispositivo.</div>';
+            return;
+        }
+        statusEl.innerHTML = '<div class="sync-status-item checking"><i class="fas fa-spinner fa-spin"></i> Comprobando conexión...</div>';
+        try {
+            const token = localStorage.getItem('dronigest_api_token') || '';
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['x-api-token'] = token;
+            const res = await fetch(url + '/api/health', { headers });
+            if (!res.ok) throw new Error('status ' + res.status);
+            const data = await res.json();
+            const total = data.collections ? data.collections.length : 0;
+            statusEl.innerHTML = '<div class="sync-status-item online"><i class="fas fa-check-circle"></i> Conectado. Sincronizando ' + (total || '') + ' colecciones de datos entre dispositivos.</div>';
+            Dronigest.DB._syncFromCloud();
+        } catch (e) {
+            statusEl.innerHTML = '<div class="sync-status-item offline"><i class="fas fa-exclamation-triangle"></i> No se pudo conectar al backend. Revisa la URL o el token (' + e.message + ').</div>';
+        }
     }
 };
 
@@ -179,7 +345,8 @@ Dronigest.Navigation = {
         agricola: 'Trabajos Agricolas', meteorologia: 'Meteorologia (AEMET)',
         cinegetico: 'Control Cinegetico',
         comunicacion: 'Comunicar Vuelo - Ministerio del Interior',
-        categoriasAesa: 'Categorías AESA'
+        categoriasAesa: 'Categorías AESA',
+        sync: 'Sincronización en la nube'
     },
 
     init() {
@@ -224,6 +391,7 @@ Dronigest.Navigation = {
 
         if (page === 'meteorologia') Dronigest.Meteo.obtenerMeteorologia();
         if (page === 'categoriasAesa') Dronigest.CategoriasAesa.listar();
+        if (page === 'sync') Dronigest.Sync.mostrar();
     }
 };
 

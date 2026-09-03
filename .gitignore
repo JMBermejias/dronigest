@@ -32,3 +32,6 @@ desktop.ini
 
 # Temporal
 generar-iconos.py
+
+# Paquetes .deb (se suben a las releases de GitHub, no al repo)
+*.deb

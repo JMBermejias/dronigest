@@ -72,6 +72,9 @@
                 <li class="nav-item" data-page="meteorologia">
                     <a href="#"><i class="fas fa-cloud-sun"></i><span>Meteorología</span></a>
                 </li>
+                <li class="nav-item" data-page="sync">
+                    <a href="#"><i class="fas fa-cloud-upload-alt"></i><span>Sincronización</span></a>
+                </li>
                 <li class="nav-divider"></li>
                 <li class="nav-item nav-external" data-page="comunicacion">
                     <a href="https://sede.interior.gob.es/portal/sede/tramites?codAgrupacion=Drones" target="_blank" rel="noopener noreferrer">
@@ -793,6 +796,49 @@
                         <div class="card-body">
                             <div id="listaCategoriasAesa" class="table-container">
                                 <p class="empty-state">No hay categorías AESA registradas</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="page-sync" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-cloud-upload-alt"></i> Sincronización en la nube</h3>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">
+                                Configura un backend REST para compartir los datos de Dronigest entre
+                                todos tus dispositivos (móvil, Linux, Windows). Los datos se guardan
+                                en la nube y cualquier dispositivo los verá actualizados.
+                            </p>
+                            <div id="syncStatus" class="sync-status">
+                                <div class="env"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="syncApiUrl">URL del backend</label>
+                                <input type="url" id="syncApiUrl" class="form-control"
+                                    placeholder="https://tu-backend.up.railway.app"
+                                    aria-label="URL del backend">
+                                <small class="form-text">Ej: https://dronigest-backend.up.railway.app</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="syncApiToken">Token de acceso (opcional)</label>
+                                <input type="password" id="syncApiToken" class="form-control"
+                                    placeholder="Deja vacío si el backend es público"
+                                    aria-label="Token de acceso">
+                                <small class="form-text">Token definido en la variable API_TOKEN del servidor.</small>
+                            </div>
+                            <div class="page-actions">
+                                <button class="btn-primary" onclick="Dronigest.Sync.guardar()">
+                                    <i class="fas fa-save"></i> Guardar y conectar
+                                </button>
+                                <button class="btn-secondary" onclick="Dronigest.Sync.verificar()">
+                                    <i class="fas fa-sync"></i> Comprobar conexión
+                                </button>
+                                <button class="btn-danger" onclick="Dronigest.Sync.desconectar()">
+                                    <i class="fas fa-unlink"></i> Desconectar
+                                </button>
                             </div>
                         </div>
                     </div>
