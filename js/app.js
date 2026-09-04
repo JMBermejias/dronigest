@@ -757,7 +757,7 @@ Dronigest.Dashboard = {
         if (act.length === 0) {
             actContainer.innerHTML = '<p class="empty-state">Sin actividad reciente</p>';
         } else {
-            const iconMap = { vuelo: 'helicopter', piloto: 'user', drone: 'helicoper', trabajo: 'briefcase', checklist: 'clipboard-check', inspeccion: 'search', agricola: 'seedling' };
+            const iconMap = { vuelo: 'helicopter', piloto: 'user', drone: 'helicopter', trabajo: 'briefcase', checklist: 'clipboard-check', inspeccion: 'search', agricola: 'seedling', cinegetico: 'crosshairs', tiposVuelo: 'plane', categoriasAesa: 'certificate' };
             actContainer.innerHTML = act.map(a => `
                 <div class="list-item">
                     <div class="item-icon"><i class="fas fa-${iconMap[a.tipo] || 'circle'}"></i></div>
