@@ -56,6 +56,20 @@ db.exec(`
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
+// API_TOKEN: si se define, requiere token en x-api-token o Authorization: Bearer <token>
+const API_TOKEN = process.env.API_TOKEN || '';
+if (API_TOKEN) {
+  app.use('/api', (req, res, next) => {
+    if (req.path === '/health') return next();
+    const header = req.headers['authorization'] || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : (req.headers['x-api-token'] || '');
+    if (token !== API_TOKEN) {
+      return res.status(403).json({ error: 'Token de API no valido' });
+    }
+    next();
+  });
+}
+
 // === Utilidades ===
 
 function generateId() {
