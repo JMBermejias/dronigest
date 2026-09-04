@@ -8,8 +8,8 @@ RUN npm install --only=production
 COPY server.js ./
 COPY Procfile ./
 
-# Volumen para persistir la base de datos
-VOLUME ["/app/data"]
+# La base de datos SQLite se guarda en la ruta configurada por SQLITE_PATH.
+# En Railway, monta un Volumen en /app/data y define SQLITE_PATH=/app/data/dronigest.db.
 ENV SQLITE_PATH=/app/data/dronigest.db
 
 EXPOSE 3001

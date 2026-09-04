@@ -119,6 +119,12 @@
                     <button class="btn-icon" id="btnWeather" title="Meteorología actual">
                         <i class="fas fa-cloud-sun"></i>
                     </button>
+                    <button class="btn-icon" id="authUserInfo" title="Usuario" style="display:none;">
+                        <i class="fas fa-user-circle"></i>
+                    </button>
+                    <button class="btn-icon" id="authLogoutBtn" title="Cerrar sesión" style="display:none;" onclick="Dronigest.Auth.cerrar()">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                     <button class="btn-install btn-primary" id="btnInstall" style="display:none;">
                         <i class="fas fa-download"></i> Instalar App
                     </button>
@@ -845,6 +851,30 @@
                 </section>
             </div>
         </main>
+    </div>
+
+    <!-- Pantalla de acceso (registro/login) -->
+    <div id="authOverlay" class="auth-overlay" style="display:none;">
+        <div class="auth-card">
+            <div class="auth-logo"><i class="fas fa-compass"></i> Dronigest</div>
+            <h2 id="authModeTitle">Iniciar sesión</h2>
+            <form onsubmit="Dronigest.Auth.login();return false;">
+                <div id="authLoginMode" class="auth-fields">
+                    <input id="authLoginUser" class="form-control" placeholder="Usuario" autocomplete="username">
+                    <input id="authLoginPass" type="password" class="form-control" placeholder="Contraseña" autocomplete="current-password">
+                    <button class="btn-primary btn-block" id="authLoginBtn" type="submit">Entrar</button>
+                </div>
+            </form>
+            <form onsubmit="Dronigest.Auth.registrar();return false;">
+                <div id="authRegisterMode" class="auth-fields" style="display:none;">
+                    <input id="authRegUser" class="form-control" placeholder="Usuario" autocomplete="username">
+                    <input id="authRegPass" type="password" class="form-control" placeholder="Contraseña (mín. 6)" autocomplete="new-password">
+                    <input id="authRegPass2" type="password" class="form-control" placeholder="Repite la contraseña" autocomplete="new-password">
+                    <button class="btn-primary btn-block" id="authRegBtn" type="submit">Crear cuenta</button>
+                </div>
+            </form>
+            <p id="authToggle" class="auth-toggle"></p>
+        </div>
     </div>
 
     <!-- Modal General -->

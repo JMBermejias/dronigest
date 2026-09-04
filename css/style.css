@@ -1933,3 +1933,66 @@ textarea.form-control {
     color: #b06000;
     border: 1px solid #fadb7e;
 }
+
+/* ===== Autenticacion (registro/login) ===== */
+.auth-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(2, 136, 209, 0.2);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.auth-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    padding: 32px 30px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+}
+.auth-logo {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0288d1;
+    margin-bottom: 6px;
+}
+.auth-card h2 {
+    margin: 4px 0 18px;
+    font-size: 20px;
+    color: #333;
+}
+.auth-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.auth-fields .form-control {
+    width: 100%;
+}
+.btn-block {
+    width: 100%;
+}
+.auth-toggle {
+    margin-top: 14px;
+    font-size: 14px;
+    color: #666;
+}
+.auth-toggle a {
+    color: #0288d1;
+    font-weight: 600;
+    text-decoration: none;
+}
+.auth-toggle a:hover {
+    text-decoration: underline;
+}
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 24px 18px;
+    }
+}

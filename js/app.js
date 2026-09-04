@@ -1,3 +1,7 @@
+// URL publica del backend (Railway). Todos los dispositivos apuntan aqui.
+// Se puede sobreescribir por dispositivo en la pantalla "Sincronizacion".
+window.DRONIGEST_API_URL = 'https://dronigest-backend-production.up.railway.app';
+
 const Dronigest = {
     userLocation: null,
 
@@ -9,6 +13,20 @@ const Dronigest = {
         this.Meteo.init();
         this.setupInstallPrompt();
         this.registerSW();
+
+        // Inicializar UI de usuario y exigir inicio de sesion si hay backend
+        this.Auth.actualizarUI();
+        if (this.DB._apiUrl() && !this.Auth.haySesion()) {
+            this.mostrarBloqueo();
+            this.Auth.mostrarPantalla('login');
+        }
+    },
+
+    mostrarBloqueo() {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        const pageTitle = document.getElementById('pageTitle');
+        if (pageTitle) pageTitle.textContent = 'Inicia sesión para continuar';
     },
 
     registerSW() {
@@ -142,8 +160,9 @@ Dronigest.DB = {
                 { id: now + 'c', nombre: 'STS', descripcion: 'STS Categoría específica' }
             ]);
         }
-        // Si hay backend configurado, intenta cargar los datos de la nube
-        if (this._apiUrl()) {
+        // Si hay backend configurado y una sesion de usuario activa,
+        // intenta cargar los datos de la nube
+        if (this._apiUrl() && this._sessionToken()) {
             this._syncFromCloud();
         }
         return this;
@@ -153,14 +172,19 @@ Dronigest.DB = {
         return window.DRONIGEST_API_URL || localStorage.getItem('dronigest_api_url') || '';
     },
 
-    _apiToken() {
-        return window.DRONIGEST_API_TOKEN || localStorage.getItem('dronigest_api_token') || '';
+    // Token de sesion del usuario (devuelto por /api/auth/login|register)
+    _sessionToken() {
+        return localStorage.getItem('dronigest_user_token') || '';
+    },
+
+    _currentUser() {
+        return localStorage.getItem('dronigest_user_name') || '';
     },
 
     _apiHeaders() {
         const headers = { 'Content-Type': 'application/json' };
-        const token = this._apiToken();
-        if (token) headers['x-api-token'] = token;
+        const token = this._sessionToken();
+        if (token) headers['x-auth-token'] = token;
         return headers;
     },
 
@@ -168,6 +192,10 @@ Dronigest.DB = {
         const opts = { method, headers: this._apiHeaders() };
         if (body !== undefined) opts.body = JSON.stringify(body);
         const res = await fetch(url, opts);
+        if (res.status === 401 && Dronigest.Auth) {
+            Dronigest.Auth.cerrar({ silencioso: true });
+            throw new Error('Sesión caducada');
+        }
         if (!res.ok) throw new Error('API error ' + res.status);
         return res.json();
     },
@@ -272,6 +300,141 @@ Dronigest.DB = {
             const base = this._apiUrl().replace(/\/$/, '');
             this._request('PUT', base + '/api/data/actividad', act).catch(() => {});
         }
+    }
+};
+
+/* ===== AUTH (registro/login de usuario) ===== */
+Dronigest.Auth = {
+    mostrarPantalla(pantalla) {
+        const overlay = document.getElementById('authOverlay');
+        const mode = pantalla || (localStorage.getItem('dronigest_user_mode') === 'register' ? 'register' : 'login');
+        if (overlay) overlay.style.display = 'flex';
+        this.mostrarFormulario(mode);
+    },
+
+    ocultarPantalla() {
+        const overlay = document.getElementById('authOverlay');
+        if (overlay) overlay.style.display = 'none';
+    },
+
+    mostrarFormulario(mode) {
+        document.getElementById('authModeTitle').textContent =
+            mode === 'register' ? 'Crear cuenta' : 'Iniciar sesión';
+        document.getElementById('authLoginMode').style.display =
+            mode === 'login' ? 'block' : 'none';
+        document.getElementById('authRegisterMode').style.display =
+            mode === 'register' ? 'block' : 'none';
+        document.getElementById('authToggle').innerHTML =
+            mode === 'login'
+                ? '¿No tienes cuenta? <a href="#" onclick="Dronigest.Auth.mostrarFormulario(\'register\');return false;">Regístrate</a>'
+                : '¿Ya tienes cuenta? <a href="#" onclick="Dronigest.Auth.mostrarFormulario(\'login\');return false;">Inicia sesión</a>';
+    },
+
+    async login() {
+        const username = document.getElementById('authLoginUser').value.trim();
+        const password = document.getElementById('authLoginPass').value;
+        if (!username || !password) {
+            Dronigest.Toast.show('Introduce usuario y contraseña', 'warning');
+            return;
+        }
+        const btn = document.getElementById('authLoginBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Entrando...'; }
+        try {
+            const res = await fetch(this._apiUrl() + '/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error al iniciar sesión');
+            this._guardarSesion(data.token, data.username);
+        } catch (e) {
+            Dronigest.Toast.show(e.message, 'error');
+            if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
+        }
+    },
+
+    async registrar() {
+        const username = document.getElementById('authRegUser').value.trim();
+        const password = document.getElementById('authRegPass').value;
+        const password2 = document.getElementById('authRegPass2').value;
+        if (!username || !password || !password2) {
+            Dronigest.Toast.show('Rellena todos los campos', 'warning');
+            return;
+        }
+        if (password !== password2) {
+            Dronigest.Toast.show('Las contraseñas no coinciden', 'warning');
+            return;
+        }
+        const btn = document.getElementById('authRegBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Registrando...'; }
+        try {
+            const res = await fetch(this._apiUrl() + '/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error al registrar');
+            this._guardarSesion(data.token, data.username);
+        } catch (e) {
+            Dronigest.Toast.show(e.message, 'error');
+            if (btn) { btn.disabled = false; btn.textContent = 'Registrarse'; }
+        }
+    },
+
+    _guardarSesion(token, username) {
+        localStorage.setItem('dronigest_user_token', token);
+        localStorage.setItem('dronigest_user_name', username);
+        this.ocultarPantalla();
+        this.actualizarUI();
+        Dronigest.Toast.show('Bienvenido, ' + username, 'success');
+        // Cargar los datos cloud del usuario al entrar
+        Dronigest.DB._syncFromCloud();
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-dashboard').classList.add('active');
+    },
+
+    cerrar(opts) {
+        const silencioso = opts && opts.silencioso;
+        const token = localStorage.getItem('dronigest_user_token');
+        if (token) {
+            fetch(this._apiUrl() + '/api/auth/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-auth-token': token }
+            }).catch(() => {});
+        }
+        localStorage.removeItem('dronigest_user_token');
+        localStorage.removeItem('dronigest_user_name');
+        this.actualizarUI();
+        if (!silencioso) {
+            this.mostrarPantalla('login');
+            Dronigest.Toast.show('Sesión cerrada', 'info');
+        } else {
+            this.mostrarPantalla('login');
+        }
+    },
+
+    actualizarUI() {
+        const user = localStorage.getItem('dronigest_user_name');
+        const authInfo = document.getElementById('authUserInfo');
+        const logoutBtn = document.getElementById('authLogoutBtn');
+        if (user) {
+            if (authInfo) { authInfo.textContent = user; authInfo.style.display = 'block'; }
+            if (logoutBtn) logoutBtn.style.display = 'inline-block';
+        } else {
+            if (authInfo) authInfo.style.display = 'none';
+            if (logoutBtn) logoutBtn.style.display = 'none';
+        }
+    },
+
+    _apiUrl() {
+        return window.DRONIGEST_API_URL || localStorage.getItem('dronigest_api_url') || '';
+    },
+
+    // Devuelve true si hay una sesion de usuario activa
+    haySesion() {
+        return !!localStorage.getItem('dronigest_user_token');
     }
 };
 
