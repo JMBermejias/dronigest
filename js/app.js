@@ -1119,7 +1119,7 @@ Dronigest.Pilotos = {
                     <option value="observador">Observador</option>
                     <option value="operador_camara">Operador de cámara</option>
                     <option value="seguridad">Seguridad</option>
-                    <option value=" coordinador">Coordinador</option>
+                    <option value="coordinador">Coordinador</option>
                     <option value="otro">Otro</option>
                 </select>
             </div>
