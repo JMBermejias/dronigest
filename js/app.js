@@ -532,9 +532,7 @@ Dronigest.Navigation = {
         };
         const overlay = document.getElementById('sidebarOverlay');
         if (overlay) overlay.onclick = () => {
-        document.getElementById('sidebar').classList.remove('mobile-open');
-        const ov = document.getElementById('sidebarOverlay');
-        if (ov) ov.classList.remove('active');
+            document.getElementById('sidebar').classList.remove('mobile-open');
             overlay.classList.remove('active');
         };
     },
