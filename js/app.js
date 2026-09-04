@@ -750,8 +750,8 @@ Dronigest.Dashboard = {
                 <div class="list-item">
                     <div class="item-icon"><i class="fas fa-helicopter"></i></div>
                     <div class="item-info">
-                        <div class="item-title">${v.nombre || 'Sin nombre'}</div>
-                        <div class="item-subtitle">${v.tipoVuelo || 'Sin tipo'} - ${v.piloto || 'Sin piloto'}</div>
+                        <div class="item-title">${Dronigest.Utils.esc(v.nombre) || 'Sin nombre'}</div>
+                        <div class="item-subtitle">${Dronigest.Utils.esc(v.tipoVuelo) || 'Sin tipo'} - ${Dronigest.Utils.esc(v.piloto) || 'Sin piloto'}</div>
                     </div>
                     <span class="badge badge-${v.estado === 'completado' ? 'success' : v.estado === 'en_curso' ? 'warning' : 'info'}">${v.estado || 'programado'}</span>
                 </div>
@@ -768,8 +768,8 @@ Dronigest.Dashboard = {
                 <div class="list-item">
                     <div class="item-icon"><i class="fas fa-${iconMap[a.tipo] || 'circle'}"></i></div>
                     <div class="item-info">
-                        <div class="item-title">${a.titulo}</div>
-                        <div class="item-subtitle">${a.detalle || ''}</div>
+                        <div class="item-title">${Dronigest.Utils.esc(a.titulo)}</div>
+                        <div class="item-subtitle">${Dronigest.Utils.esc(a.detalle) || ''}</div>
                     </div>
                     <div class="item-time">${this.tiempoRelativo(a.fecha)}</div>
                 </div>
@@ -800,6 +800,10 @@ Dronigest.Utils = {
     },
     generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    },
+    esc(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 };
 
@@ -1002,11 +1006,11 @@ Dronigest.Vuelos = {
                 <tbody>
                     ${vuelos.map(v => `
                         <tr>
-                            <td data-label="Nombre"><strong>${v.nombre || '-'}</strong></td>
+                            <td data-label="Nombre"><strong>${Dronigest.Utils.esc(v.nombre) || '-'}</strong></td>
                             <td data-label="Fecha">${Dronigest.Utils.formatDate(v.fecha)}</td>
-                            <td data-label="Piloto">${v.piloto || '-'}</td>
-                            <td data-label="Drone">${v.drone || '-'}</td>
-                            <td data-label="Tipo">${v.tipoVuelo || '-'}</td>
+                            <td data-label="Piloto">${Dronigest.Utils.esc(v.piloto) || '-'}</td>
+                            <td data-label="Drone">${Dronigest.Utils.esc(v.drone) || '-'}</td>
+                            <td data-label="Tipo">${Dronigest.Utils.esc(v.tipoVuelo) || '-'}</td>
                             <td data-label="Estado"><span class="badge badge-${v.estado === 'completado' ? 'success' : v.estado === 'en_curso' ? 'warning' : v.estado === 'cancelado' ? 'danger' : 'info'}">${v.estado || 'programado'}</span></td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Vuelos.editar('${v.id}')" title="Editar"><i class="fas fa-edit"></i></button>
@@ -1199,11 +1203,11 @@ Dronigest.Pilotos = {
                 <tbody>
                     ${pilotos.map(p => `
                         <tr>
-                            <td data-label="Nombre"><span class="row-icon" style="background:#E3F2FD;color:#0288D1;"><i class="fas fa-user-tie"></i></span> <strong>${p.nombre}</strong></td>
-                            <td data-label="NIF">${p.nif || '-'}</td>
-                            <td data-label="Certificación">${p.certificacion || '-'}</td>
-                            <td data-label="Categoría"><span class="badge badge-info">${p.categoria || '-'}</span></td>
-                            <td data-label="Teléfono">${p.telefono || '-'}</td>
+                            <td data-label="Nombre"><span class="row-icon" style="background:#E3F2FD;color:#0288D1;"><i class="fas fa-user-tie"></i></span> <strong>${Dronigest.Utils.esc(p.nombre)}</strong></td>
+                            <td data-label="NIF">${Dronigest.Utils.esc(p.nif) || '-'}</td>
+                            <td data-label="Certificación">${Dronigest.Utils.esc(p.certificacion) || '-'}</td>
+                            <td data-label="Categoría"><span class="badge badge-info">${Dronigest.Utils.esc(p.categoria) || '-'}</span></td>
+                            <td data-label="Teléfono">${Dronigest.Utils.esc(p.telefono) || '-'}</td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Pilotos.editarPiloto('${p.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Pilotos.eliminarPiloto('${p.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -1227,10 +1231,10 @@ Dronigest.Pilotos = {
                 <tbody>
                     ${auxiliares.map(a => `
                         <tr>
-                            <td data-label="Nombre"><span class="row-icon" style="background:#E8F5E9;color:#2E7D32;"><i class="fas fa-user-friends"></i></span> <strong>${a.nombre}</strong></td>
-                            <td data-label="NIF">${a.nif || '-'}</td>
-                            <td data-label="Función"><span class="badge badge-info">${a.funcion || '-'}</span></td>
-                            <td data-label="Teléfono">${a.telefono || '-'}</td>
+                            <td data-label="Nombre"><span class="row-icon" style="background:#E8F5E9;color:#2E7D32;"><i class="fas fa-user-friends"></i></span> <strong>${Dronigest.Utils.esc(a.nombre)}</strong></td>
+                            <td data-label="NIF">${Dronigest.Utils.esc(a.nif) || '-'}</td>
+                            <td data-label="Función"><span class="badge badge-info">${Dronigest.Utils.esc(a.funcion) || '-'}</span></td>
+                            <td data-label="Teléfono">${Dronigest.Utils.esc(a.telefono) || '-'}</td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Pilotos.editarAuxiliar('${a.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Pilotos.eliminarAuxiliar('${a.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -1387,8 +1391,8 @@ Dronigest.TiposVuelo = {
                 <tbody>
                     ${tipos.map(t => `
                         <tr>
-                            <td data-label="Nombre"><strong>${t.nombre}</strong><br><small style="color:var(--text-light)">${t.descripcion || ''}</small></td>
-                            <td data-label="Categoría"><span class="badge badge-info">${t.categoria || '-'}</span></td>
+                            <td data-label="Nombre"><strong>${Dronigest.Utils.esc(t.nombre)}</strong><br><small style="color:var(--text-light)">${Dronigest.Utils.esc(t.descripcion) || ''}</small></td>
+                            <td data-label="Categoría"><span class="badge badge-info">${Dronigest.Utils.esc(t.categoria) || '-'}</span></td>
                             <td data-label="Alt. Máx">${t.altitudMax || '-'}m</td>
                             <td data-label="Dist. Máx">${t.distanciaMax || '-'}m</td>
                             <td class="actions">
@@ -1772,9 +1776,9 @@ Dronigest.Equipos = {
                 <tbody>
                     ${drones.map(d => `
                         <tr>
-                            <td data-label="Nombre"><span class="row-icon" style="background:#E1F5FE;color:#01579B;"><i class="fas fa-helicopter"></i></span> <strong>${d.nombre}</strong></td>
-                            <td data-label="Modelo">${d.modelo || '-'}</td>
-                            <td data-label="Nº Serie">${d.serie || '-'}</td>
+                            <td data-label="Nombre"><span class="row-icon" style="background:#E1F5FE;color:#01579B;"><i class="fas fa-helicopter"></i></span> <strong>${Dronigest.Utils.esc(d.nombre)}</strong></td>
+                            <td data-label="Modelo">${Dronigest.Utils.esc(d.modelo) || '-'}</td>
+                            <td data-label="Nº Serie">${Dronigest.Utils.esc(d.serie) || '-'}</td>
                             <td data-label="Horas">${d.horasVuelo || 0}h</td>
                             <td data-label="Estado"><span class="badge badge-${d.estado === 'operativo' ? 'success' : d.estado === 'averiado' ? 'danger' : 'warning'}">${d.estado || '-'}</span></td>
                             <td class="actions">
@@ -1981,10 +1985,10 @@ Dronigest.Trabajos = {
                 <tbody>
                     ${trabajos.map(t => `
                         <tr>
-                            <td data-label="Nombre"><strong>${t.nombre}</strong><br><small style="color:var(--text-light)">${Dronigest.Utils.formatDate(t.fechaInicio)}</small></td>
+                            <td data-label="Nombre"><strong>${Dronigest.Utils.esc(t.nombre)}</strong><br><small style="color:var(--text-light)">${Dronigest.Utils.formatDate(t.fechaInicio)}</small></td>
                             <td data-label="Tipo"><span class="badge badge-info">${tipoLabels[t.tipo] || t.tipo}</span></td>
-                            <td data-label="Cliente">${t.cliente || '-'}</td>
-                            <td data-label="Piloto">${t.piloto || '-'}</td>
+                            <td data-label="Cliente">${Dronigest.Utils.esc(t.cliente) || '-'}</td>
+                            <td data-label="Piloto">${Dronigest.Utils.esc(t.piloto) || '-'}</td>
                             <td data-label="Estado"><span class="badge badge-${t.estado === 'completado' ? 'success' : t.estado === 'en_curso' ? 'warning' : t.estado === 'cancelado' ? 'danger' : 'info'}">${t.estado || '-'}</span></td>
                             <td class="actions">
                                 <button class="btn-action edit" onclick="Dronigest.Trabajos.editar('${t.id}')" title="Editar"><i class="fas fa-edit"></i></button>
@@ -2149,10 +2153,10 @@ Dronigest.Inspecciones = {
                     <tbody>
                     ${items.map(i => `
                         <tr class="${i.completado ? 'row-completed' : ''}">
-                            <td data-label="Nombre"><strong>${i.nombre}</strong>${i.completado ? ' <i class="fas fa-check-circle" style="color:var(--success);font-size:0.8rem;" title="Completado"></i>' : ''}<br><small class="badge badge-${tipoBadge[tipoKey] || 'info'}">${i.subtipo || tipoLabels[tipoKey]}</small></td>
+                            <td data-label="Nombre"><strong>${Dronigest.Utils.esc(i.nombre)}</strong>${i.completado ? ' <i class="fas fa-check-circle" style="color:var(--success);font-size:0.8rem;" title="Completado"></i>' : ''}<br><small class="badge badge-${tipoBadge[tipoKey] || 'info'}">${Dronigest.Utils.esc(i.subtipo) || tipoLabels[tipoKey]}</small></td>
                             <td data-label="Fecha">${Dronigest.Utils.formatDate(i.fecha)}</td>
-                            <td data-label="Cliente">${i.cliente || '-'}</td>
-                            <td data-label="Piloto">${i.piloto || '-'}</td>
+                            <td data-label="Cliente">${Dronigest.Utils.esc(i.cliente) || '-'}</td>
+                            <td data-label="Piloto">${Dronigest.Utils.esc(i.piloto) || '-'}</td>
                             <td data-label="Elementos">${i.numElementos || 0}</td>
                             <td data-label="Anomalías">${i.numAnomalias > 0 ? `<span style="color:var(--danger);font-weight:700;">${i.numAnomalias}</span>` : '0'}</td>
                             <td class="actions">
@@ -3211,14 +3215,14 @@ Dronigest.Informes = {
         const ahora = new Date();
         const fechaStr = ahora.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         const rows = fields.map(([label, value]) =>
-            `<tr><td>${label}</td><td>${value}</td></tr>`
+            `<tr><td>${label}</td><td>${Dronigest.Utils.esc(value)}</td></tr>`
         ).join('');
 
         const win = window.open('', '_blank');
         win.document.write(`
 <!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><title>${title} - ${item.nombre}</title>
+<head><meta charset="UTF-8"><title>${title} - ${Dronigest.Utils.esc(item.nombre)}</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; padding: 40px; line-height: 1.5; }
