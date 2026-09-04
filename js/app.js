@@ -167,11 +167,15 @@ Dronigest.DB = {
         });
         if (this.get('categoriasAesa').length === 0) {
             const now = Date.now().toString(36);
-            this.set('categoriasAesa', [
+            const defaultsAesa = [
                 { id: now + 'a', nombre: 'A1-A3', descripcion: 'Categoría abierta A1-A3' },
                 { id: now + 'b', nombre: 'A2', descripcion: 'Categoría abierta A2' },
                 { id: now + 'c', nombre: 'STS', descripcion: 'STS Categoría específica' }
-            ]);
+            ];
+            // Escribir solo en local: no hacer push al servidor, el sync cloud
+            // decidira los datos reales del usuario (evita sobrescribir)
+            this._cache['categoriasAesa'] = defaultsAesa;
+            localStorage.setItem('dronigest_categoriasAesa', JSON.stringify(defaultsAesa));
         }
         // Si hay backend configurado y una sesion de usuario activa,
         // intenta cargar los datos de la nube

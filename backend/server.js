@@ -52,6 +52,40 @@ db.exec(`
   );
 `);
 
+// Migracion desde el esquema antiguo v1.3.x (sin columna username):
+// la tabla se creo con PRIMARY KEY (collection) y el codigo actual espera
+// (username, collection). CREATE TABLE IF NOT EXISTS no altera tablas
+// existentes, asi que detectamos la ausencia de la columna y migramos,
+// replicando los datos globales antiguos a todos los usuarios registrados.
+const dataCols = db.prepare('PRAGMA table_info(dronigest_data)').all();
+if (dataCols.length > 0 && !dataCols.some(c => c.name === 'username')) {
+  console.log('Migrando esquema de dronigest_data (v1.3.x -> v1.4.x)...');
+  db.exec(`
+    ALTER TABLE dronigest_data RENAME TO dronigest_data_legacy;
+    CREATE TABLE dronigest_data (
+      username TEXT NOT NULL,
+      collection TEXT NOT NULL,
+      data TEXT NOT NULL,
+      PRIMARY KEY (username, collection)
+    );
+  `);
+  const legacyRows = db.prepare('SELECT collection, data FROM dronigest_data_legacy').all();
+  const users = db.prepare('SELECT username FROM users').all();
+  const insertData = db.prepare(
+    'INSERT OR REPLACE INTO dronigest_data (username, collection, data) VALUES (?, ?, ?)'
+  );
+  const migrate = db.transaction(() => {
+    for (const u of users) {
+      for (const row of legacyRows) {
+        insertData.run(u.username, row.collection, row.data);
+      }
+    }
+  });
+  migrate();
+  db.exec('DROP TABLE dronigest_data_legacy');
+  console.log(`Migracion completada: ${legacyRows.length} colecciones replicadas a ${users.length} usuarios`);
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -107,9 +141,14 @@ function auth(req, res, next) {
 // === Operaciones de persistencia (por usuario) ===
 
 function getCollection(username, collection) {
-  const row = db.prepare('SELECT data FROM dronigest_data WHERE username = ? AND collection = ?')
-    .get(username, collection);
-  return row ? JSON.parse(row.data) : [];
+  try {
+    const row = db.prepare('SELECT data FROM dronigest_data WHERE username = ? AND collection = ?')
+      .get(username, collection);
+    return row ? JSON.parse(row.data) : [];
+  } catch (e) {
+    console.error('getCollection error:', e.message);
+    return [];
+  }
 }
 
 function setCollection(username, collection, data) {
