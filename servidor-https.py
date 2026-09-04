@@ -18,8 +18,7 @@ import os
 import sys
 import socket
 import subprocess
-import webbrowser
-import threading
+import time
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8443
 CERT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.cert')
@@ -116,7 +115,18 @@ def main():
     print("  Presiona Ctrl+C para detener el servidor")
     print()
     
-    threading.Timer(1.0, lambda: webbrowser.open(f'https://localhost:{PORT}')).start()
+    url = f'https://localhost:{PORT}'
+    time.sleep(1)
+    try:
+        subprocess.Popen(['xdg-open', url])
+    except Exception:
+        try:
+            subprocess.Popen(['gio', 'open', url])
+        except Exception:
+            try:
+                subprocess.Popen(['firefox', url])
+            except Exception:
+                print(f"  Abre manualmente: {url}")
     
     try:
         httpd.serve_forever()
