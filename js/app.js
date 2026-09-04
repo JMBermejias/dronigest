@@ -20,6 +20,11 @@ const Dronigest = {
             this.mostrarBloqueo();
             this.Auth.mostrarPantalla('login');
         }
+
+        // Arrancar sincronizacion periodica si hay sesion activa
+        if (this.DB._apiUrl() && this.Auth.haySesion()) {
+            this.DB._startPeriodicSync();
+        }
     },
 
     mostrarBloqueo() {
@@ -56,11 +61,20 @@ const Dronigest = {
         let deferredPrompt;
         let installDismissed = localStorage.getItem('dronigest_install_dismissed');
 
+        const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+        if (isStandalone) {
+            const btn = document.getElementById('btnInstall');
+            if (btn) btn.style.display = 'none';
+            return;
+        }
+
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
 
-            if (installDismissed) return;
+            if (installDismissed || isFirefox) return;
 
             const btn = document.getElementById('btnInstall');
             if (btn) {
@@ -115,9 +129,8 @@ const Dronigest = {
             Dronigest.Toast.show('Dronigest instalada en tu dispositivo', 'success');
         });
 
-        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-            const btn = document.getElementById('btnInstall');
-            if (btn) btn.style.display = 'none';
+        if (isFirefox) {
+            localStorage.setItem('dronigest_install_dismissed', '1');
         }
     }
 };
@@ -188,12 +201,14 @@ Dronigest.DB = {
         return headers;
     },
 
-    async _request(method, url, body) {
+    async _request(method, url, body, _silent) {
         const opts = { method, headers: this._apiHeaders() };
         if (body !== undefined) opts.body = JSON.stringify(body);
         const res = await fetch(url, opts);
         if (res.status === 401 && Dronigest.Auth) {
-            Dronigest.Auth.cerrar({ silencioso: true });
+            if (!_silent) {
+                Dronigest.Auth.cerrar({ silencioso: true });
+            }
             throw new Error('Sesión caducada');
         }
         if (!res.ok) throw new Error('API error ' + res.status);
@@ -204,23 +219,44 @@ Dronigest.DB = {
         document.dispatchEvent(new CustomEvent('dronigest:data', { detail: {} }));
     },
 
-    async _syncFromCloud() {
+    async _syncFromCloud(silent) {
         const base = this._apiUrl().replace(/\/$/, '');
+        if (!base || !this._sessionToken()) {
+            this._online = false;
+            this._ready = true;
+            return;
+        }
         try {
-            const all = await this._request('GET', base + '/api/data');
+            const all = await this._request('GET', base + '/api/data', undefined, true);
             Object.keys(all).forEach(k => {
                 if (Array.isArray(all[k])) this._cache[k] = all[k];
             });
             this._online = true;
             this._persistLocal();
             this._emitChange();
-            if (window.Dronigest && Dronigest.Toast) {
+            if (!silent && window.Dronigest && Dronigest.Toast) {
                 Dronigest.Toast.show('Datos sincronizados con la nube', 'success');
             }
         } catch (e) {
             this._online = false;
         }
         this._ready = true;
+    },
+
+    _startPeriodicSync() {
+        if (this._syncInterval) clearInterval(this._syncInterval);
+        this._syncInterval = setInterval(() => {
+            if (this._apiUrl() && this._sessionToken()) {
+                this._syncFromCloud(true);
+            }
+        }, 30000);
+    },
+
+    _stopPeriodicSync() {
+        if (this._syncInterval) {
+            clearInterval(this._syncInterval);
+            this._syncInterval = null;
+        }
     },
 
     _persistLocal() {
@@ -391,6 +427,7 @@ Dronigest.Auth = {
         Dronigest.Toast.show('Bienvenido, ' + username, 'success');
         // Cargar los datos cloud del usuario al entrar
         Dronigest.DB._syncFromCloud();
+        Dronigest.DB._startPeriodicSync();
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById('page-dashboard').classList.add('active');
     },
@@ -407,11 +444,10 @@ Dronigest.Auth = {
         localStorage.removeItem('dronigest_user_token');
         localStorage.removeItem('dronigest_user_name');
         this.actualizarUI();
+        if (Dronigest.DB) Dronigest.DB._stopPeriodicSync();
+        this.mostrarPantalla('login');
         if (!silencioso) {
-            this.mostrarPantalla('login');
             Dronigest.Toast.show('Sesión cerrada', 'info');
-        } else {
-            this.mostrarPantalla('login');
         }
     },
 
@@ -443,7 +479,8 @@ Dronigest.Sync = {
     mostrar() {
         const urlEl = document.getElementById('syncApiUrl');
         const tokenEl = document.getElementById('syncApiToken');
-        if (urlEl) urlEl.value = localStorage.getItem('dronigest_api_url') || '';
+        const effectiveUrl = Dronigest.DB._apiUrl();
+        if (urlEl) urlEl.value = effectiveUrl || localStorage.getItem('dronigest_api_url') || '';
         if (tokenEl) tokenEl.value = localStorage.getItem('dronigest_api_token') || '';
         this.verificar();
     },
@@ -473,7 +510,7 @@ Dronigest.Sync = {
     },
 
     async verificar() {
-        const url = localStorage.getItem('dronigest_api_url') || '';
+        const url = Dronigest.DB._apiUrl();
         const statusEl = document.getElementById('syncStatus');
         if (!statusEl) return;
         if (!url) {
