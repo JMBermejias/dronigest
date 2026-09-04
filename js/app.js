@@ -3247,7 +3247,7 @@ Dronigest.Informes = {
     <div class="report-section-title">Datos del informe</div>
     <div class="report-info"><table>${rows}</table></div>
     <div class="report-footer">
-        Informe generado el ${fechaStr} &mdash; Dronigest v1.5.0<br>
+        Informe generado el ${fechaStr} &mdash; Dronigest v1.5.3<br>
         Este documento es un resumen informativo sin validez legal.
     </div>
     <script>
