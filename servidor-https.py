@@ -18,6 +18,8 @@ import os
 import sys
 import socket
 import subprocess
+import webbrowser
+import threading
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8443
 CERT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.cert')
@@ -40,12 +42,39 @@ def generate_cert():
         return
     
     print("  Generando certificado SSL autofirmado...")
+    ip = get_local_ip()
+    
+    # Crear config temporal con SAN para que Firefox/Chrome acepten el cert
+    cfg = os.path.join(CERT_DIR, 'openssl.cnf')
+    with open(cfg, 'w') as f:
+        f.write(f"""[req]
+distinguished_name = req_dn
+x509_extensions = v3_req
+prompt = no
+
+[req_dn]
+CN = localhost
+O = Dronigest
+C = ES
+
+[v3_req]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+IP.1 = 127.0.0.1
+IP.2 = ::1
+IP.3 = {ip}
+""")
+    
     subprocess.run([
         'openssl', 'req', '-x509', '-newkey', 'rsa:2048',
         '-keyout', KEY_FILE, '-out', CERT_FILE,
         '-days', '365', '-nodes',
-        '-subj', '/CN=dronigest-local/O=Dronigest/C=ES'
+        '-config', cfg
     ], capture_output=True)
+    
+    os.remove(cfg)
     
     if not os.path.exists(CERT_FILE):
         print("  ERROR: No se pudo generar el certificado.")
@@ -86,6 +115,8 @@ def main():
     print()
     print("  Presiona Ctrl+C para detener el servidor")
     print()
+    
+    threading.Timer(1.0, lambda: webbrowser.open(f'https://localhost:{PORT}')).start()
     
     try:
         httpd.serve_forever()
