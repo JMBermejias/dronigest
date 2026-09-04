@@ -553,6 +553,14 @@ Dronigest.Navigation = {
         if (page === 'meteorologia') Dronigest.Meteo.obtenerMeteorologia();
         if (page === 'categoriasAesa') Dronigest.CategoriasAesa.listar();
         if (page === 'sync') Dronigest.Sync.mostrar();
+        if (page === 'vuelos') Dronigest.Vuelos.listar();
+        if (page === 'pilotos') Dronigest.Pilotos.listar();
+        if (page === 'tiposVuelo') Dronigest.TiposVuelo.listar();
+        if (page === 'equipos') { Dronigest.Equipos.listarDrones(); Dronigest.Equipos.listarModelos(); Dronigest.Equipos.listarAccesorios(); }
+        if (page === 'trabajos') Dronigest.Trabajos.listar();
+        if (page === 'inspecciones') Dronigest.Inspecciones.listar();
+        if (page === 'agricola') Dronigest.Agricola.listar();
+        if (page === 'cinegetico') Dronigest.Cinegetico.listar();
     }
 };
 
