@@ -35,3 +35,6 @@ generar-iconos.py
 
 # Paquetes .deb (se suben a las releases de GitHub, no al repo)
 *.deb
+
+# Proyecto bubblewrap (contiene el keystore, no subir)
+bubblewrap-build/

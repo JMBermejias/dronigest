@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Dronigest
+Comment=Gestion de actividades de drones
+Exec=/opt/dronigest/iniciar.sh
+Icon=dronigest
+Terminal=false
+Type=Application
+Categories=Office;
+MimeType=
+StartupNotify=true
+X-GNOME-UsesNotifications=true

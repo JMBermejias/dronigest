@@ -333,6 +333,23 @@ Dronigest.DB = {
         return (this._cache[key] || []).find(i => i.id === id) || null;
     },
 
+    // Categorias disponibles para desplegables de pilotos/modelos:
+    // unifica categoriasAesa y categorias (sin duplicados por nombre)
+    categoriasDisponibles() {
+        const seen = {};
+        const out = [];
+        ['categoriasAesa', 'categorias'].forEach(key => {
+            (this._cache[key] || []).forEach(c => {
+                const nombre = (c && c.nombre) ? String(c.nombre).trim() : '';
+                if (nombre && !seen[nombre]) {
+                    seen[nombre] = true;
+                    out.push(c);
+                }
+            });
+        });
+        return out;
+    },
+
     logActividad(tipo, titulo, detalle) {
         const act = (this._cache['actividad'] || []).slice();
         act.unshift({ tipo, titulo, detalle, fecha: new Date().toISOString() });
@@ -623,10 +640,12 @@ Dronigest.Navigation = {
 
 /* ===== MODAL ===== */
 Dronigest.Modal = {
-    show(title, bodyHTML, footerHTML) {
+    show(title, bodyHTML, footerHTML, large) {
         document.getElementById('modalTitle').innerHTML = title;
         document.getElementById('modalBody').innerHTML = bodyHTML;
         document.getElementById('modalFooter').innerHTML = footerHTML || '';
+        const content = document.querySelector('#modal .modal-content');
+        if (content) content.classList.toggle('modal-large', !!large);
         document.getElementById('modal').style.display = 'flex';
     },
     cerrar() {
@@ -861,6 +880,31 @@ Dronigest.Utils = {
     esc(str) {
         if (!str) return '';
         return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    },
+
+    // Comprime una imagen a dataURL JPEG (para fotos de documentacion)
+    compressImage(file, maxDim = 1200, quality = 0.72) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+            reader.onload = () => {
+                const img = new Image();
+                img.onerror = () => reject(new Error('Formato de imagen no válido'));
+                img.onload = () => {
+                    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+                    const w = Math.max(1, Math.round(img.width * scale));
+                    const h = Math.max(1, Math.round(img.height * scale));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
     }
 };
 
@@ -1074,6 +1118,8 @@ Dronigest.Vuelos = {
 
 /* ===== PILOTOS ===== */
 Dronigest.Pilotos = {
+    tiposDoc: ['Certificado de operador', 'Certificado de piloto', 'Licencia de vuelo', 'Seguro de responsabilidad', 'DNI / NIE', 'Otro'],
+
     listar() {
         this.listarPilotos();
         this.listarAuxiliares();
@@ -1087,7 +1133,8 @@ Dronigest.Pilotos = {
     },
 
     nuevoPiloto() {
-        const cats = Dronigest.DB.get('categoriasAesa');
+        const cats = Dronigest.DB.categoriasDisponibles();
+        Dronigest._pilotDocs = [];
         const body = `
             <div class="form-group"><label>Nombre completo</label><input type="text" id="pNombre" class="form-control" placeholder="Nombre del piloto"></div>
             <div class="form-row">
@@ -1102,17 +1149,73 @@ Dronigest.Pilotos = {
                 <div class="form-group"><label>Categoría</label>
                     <select id="pCategoria" class="form-control">
                         <option value="">Seleccionar categoría</option>
-                        ${cats.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('')}
+                        ${cats.map(c => `<option value="${Dronigest.Utils.esc(c.nombre)}">${Dronigest.Utils.esc(c.nombre)}</option>`).join('')}
                     </select>
                 </div>
                 <div class="form-group"><label>Cobertura Seguro</label><input type="text" id="pSeguro" class="form-control" placeholder="Nº póliza"></div>
             </div>
             <div class="form-group"><label>Notas</label><textarea id="pNotas" class="form-control" placeholder="Observaciones..."></textarea></div>
+            <div class="form-group">
+                <label><i class="fas fa-folder-open"></i> Documentación (fotos de certificados)</label>
+                <div id="pDocsList" class="doc-grid">
+                    <p class="empty-state" style="margin:0">Sin documentos adjuntos</p>
+                </div>
+                <div class="doc-add-row">
+                    <select id="pDocTipoNew" class="form-control">
+                        ${Dronigest.Pilotos.tiposDoc.map(t => `<option value="${Dronigest.Utils.esc(t)}">${Dronigest.Utils.esc(t)}</option>`).join('')}
+                    </select>
+                    <button type="button" class="btn-secondary" onclick="Dronigest.Pilotos.adjuntarDoc()"><i class="fas fa-camera"></i> Adjuntar foto</button>
+                </div>
+                <input type="file" id="pDocFile" accept="image/*" style="display:none">
+                <small class="form-hint">Las fotos se comprimen y guardan junto al piloto (se sincronizan con la nube).</small>
+            </div>
         `;
         Dronigest.Modal.show('<i class="fas fa-user-plus"></i> Nuevo Piloto', body, `
             <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
             <button class="btn-primary" onclick="Dronigest.Pilotos.guardarPiloto()"><i class="fas fa-save"></i> Guardar</button>
         `);
+    },
+
+    adjuntarDoc() {
+        const input = document.getElementById('pDocFile');
+        if (!input) return;
+        input.value = '';
+        input.onchange = async () => {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            const tipo = document.getElementById('pDocTipoNew').value || 'Otro';
+            try {
+                const dataUrl = await Dronigest.Utils.compressImage(file, 1200, 0.72);
+                Dronigest._pilotDocs = Dronigest._pilotDocs || [];
+                Dronigest._pilotDocs.push({ id: Dronigest.Utils.generateId(), tipo, nombre: file.name, dataUrl, fecha: new Date().toISOString() });
+                this.renderDocsForm();
+                Dronigest.Toast.show('Imagen adjuntada: ' + tipo, 'success');
+            } catch (e) {
+                Dronigest.Toast.show('No se pudo procesar la imagen', 'error');
+            }
+        };
+        input.click();
+    },
+
+    quitarDoc(docId) {
+        Dronigest._pilotDocs = (Dronigest._pilotDocs || []).filter(d => d.id !== docId);
+        this.renderDocsForm();
+    },
+
+    renderDocsForm() {
+        const container = document.getElementById('pDocsList');
+        if (!container) return;
+        const docs = Dronigest._pilotDocs || [];
+        if (docs.length === 0) {
+            container.innerHTML = '<p class="empty-state" style="margin:0">Sin documentos adjuntos</p>';
+            return;
+        }
+        container.innerHTML = docs.map(d => `
+            <div class="doc-item">
+                <img class="doc-thumb" src="${d.dataUrl}" alt="${Dronigest.Utils.esc(d.tipo)}" onclick="window.open(this.src)">
+                <span class="doc-label">${Dronigest.Utils.esc(d.tipo)}</span>
+                <button type="button" class="doc-remove" title="Quitar" onclick="Dronigest.Pilotos.quitarDoc('${d.id}')"><i class="fas fa-times"></i></button>
+            </div>`).join('');
     },
 
     guardarPiloto(id) {
@@ -1125,6 +1228,7 @@ Dronigest.Pilotos = {
             categoria: document.getElementById('pCategoria').value,
             seguro: document.getElementById('pSeguro').value,
             notas: document.getElementById('pNotas').value,
+            documentos: (Dronigest._pilotDocs || []).slice(),
             tipo: 'piloto'
         };
         if (!data.nombre) { Dronigest.Toast.show('Introduce el nombre del piloto', 'warning'); return; }
@@ -1153,10 +1257,55 @@ Dronigest.Pilotos = {
                 const el = document.getElementById(elId);
                 if (el && p[dataKey] !== undefined && p[dataKey] !== null) el.value = p[dataKey];
             });
+            Dronigest._pilotDocs = (p.documentos || []).slice();
+            this.renderDocsForm();
             document.getElementById('modalFooter').innerHTML = `
                 <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
                 <button class="btn-primary" onclick="Dronigest.Pilotos.guardarPiloto('${id}')"><i class="fas fa-save"></i> Actualizar</button>`;
         }, 100);
+    },
+
+    verPiloto(id) {
+        const p = Dronigest.DB.find('pilotos', id);
+        if (!p) return;
+        const docs = p.documentos || [];
+        const fieldRow = (label, value) => `
+            <div class="detail-item"><span class="detail-label">${label}</span><span class="detail-value">${Dronigest.Utils.esc(value) || '-'}</span></div>`;
+        const body = `
+            <div class="detail-head">
+                <span class="row-icon" style="background:#E3F2FD;color:#0288D1;"><i class="fas fa-user-tie"></i></span>
+                <div>
+                    <h4>${Dronigest.Utils.esc(p.nombre)}</h4>
+                    <span class="badge badge-info">${Dronigest.Utils.esc(p.categoria) || 'Sin categoría'}</span>
+                </div>
+            </div>
+            <div class="detail-grid">
+                ${fieldRow('NIF / NIE', p.nif)}
+                ${fieldRow('Teléfono', p.telefono)}
+                ${fieldRow('Email', p.email)}
+                ${fieldRow('Certificación AESA', p.certificacion)}
+                ${fieldRow('Cobertura Seguro', p.seguro)}
+                ${fieldRow('Registrado', p.creado ? Dronigest.Utils.formatDate(p.creado) : '')}
+            </div>
+            ${p.notas ? `<div class="detail-notas"><strong>Notas</strong><p>${Dronigest.Utils.esc(p.notas)}</p></div>` : ''}
+            <div class="detail-section-title"><i class="fas fa-folder-open"></i> Documentación <span class="doc-count">${docs.length}</span></div>
+            ${docs.length === 0
+                ? '<p class="empty-state" style="margin:0">Sin documentos adjuntos</p>'
+                : `<div class="doc-grid">${docs.map(d => `
+                    <div class="doc-item">
+                        <img class="doc-thumb" src="${d.dataUrl}" alt="${Dronigest.Utils.esc(d.tipo)}" title="${Dronigest.Utils.esc(d.tipo)}" onclick="window.open(this.src)">
+                        <span class="doc-label">${Dronigest.Utils.esc(d.tipo)}</span>
+                    </div>`).join('')}</div>`}
+        `;
+        Dronigest.Modal.show('<i class="fas fa-user-circle"></i> Ficha del Piloto', body, `
+            <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cerrar</button>
+            <button class="btn-primary" onclick="Dronigest.Pilotos.verEditar('${p.id}')"><i class="fas fa-edit"></i> Editar</button>
+        `, true);
+    },
+
+    verEditar(id) {
+        Dronigest.Modal.cerrar();
+        this.editarPiloto(id);
     },
 
     eliminarPiloto(id) {
@@ -1255,12 +1404,13 @@ Dronigest.Pilotos = {
                 <tbody>
                     ${pilotos.map(p => `
                         <tr>
-                            <td data-label="Nombre"><span class="row-icon" style="background:#E3F2FD;color:#0288D1;"><i class="fas fa-user-tie"></i></span> <strong>${Dronigest.Utils.esc(p.nombre)}</strong></td>
+                            <td data-label="Nombre"><span class="row-icon" style="background:#E3F2FD;color:#0288D1;"><i class="fas fa-user-tie"></i></span> <a href="javascript:void(0)" class="row-link" onclick="Dronigest.Pilotos.verPiloto('${p.id}')">${Dronigest.Utils.esc(p.nombre)}</a></td>
                             <td data-label="NIF">${Dronigest.Utils.esc(p.nif) || '-'}</td>
                             <td data-label="Certificación">${Dronigest.Utils.esc(p.certificacion) || '-'}</td>
                             <td data-label="Categoría"><span class="badge badge-info">${Dronigest.Utils.esc(p.categoria) || '-'}</span></td>
                             <td data-label="Teléfono">${Dronigest.Utils.esc(p.telefono) || '-'}</td>
                             <td class="actions">
+                                <button class="btn-action view" onclick="Dronigest.Pilotos.verPiloto('${p.id}')" title="Ver ficha"><i class="fas fa-eye"></i></button>
                                 <button class="btn-action edit" onclick="Dronigest.Pilotos.editarPiloto('${p.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                                 <button class="btn-action delete" onclick="Dronigest.Pilotos.eliminarPiloto('${p.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </td>
@@ -1659,7 +1809,7 @@ Dronigest.Equipos = {
     },
 
     nuevoModelo() {
-        const cats = Dronigest.DB.get('categoriasAesa');
+        const cats = Dronigest.DB.categoriasDisponibles();
         const body = `
             <div class="form-group"><label>Nombre del modelo</label><input type="text" id="mNombre" class="form-control" placeholder="Ej: Matrice 30T"></div>
             <div class="form-row">
@@ -3299,7 +3449,7 @@ Dronigest.Informes = {
     <div class="report-section-title">Datos del informe</div>
     <div class="report-info"><table>${rows}</table></div>
     <div class="report-footer">
-        Informe generado el ${fechaStr} &mdash; Dronigest v1.5.5<br>
+        Informe generado el ${fechaStr} &mdash; Dronigest v1.5.6<br>
         Este documento es un resumen informativo sin validez legal.
     </div>
     <script>

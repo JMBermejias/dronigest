@@ -21,8 +21,8 @@
     "path": "keys/dronigest.jks",
     "alias": "dronigest"
   },
-  "appVersion": "1.5.5",
-  "appVersionCode": 3,
+  "appVersion": "1.5.6",
+  "appVersionCode": 4,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://jmbermejias.github.io/dronigest/manifest.json",
