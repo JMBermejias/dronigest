@@ -1,6 +1,6 @@
 {
   "name": "dronigest-backend",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "Backend REST de Dronigest - sincronización de datos entre dispositivos",
   "main": "server.js",
   "scripts": {
