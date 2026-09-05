@@ -221,6 +221,9 @@ Dronigest.DB = {
 
     _emitChange() {
         document.dispatchEvent(new CustomEvent('dronigest:data', { detail: {} }));
+        if (Dronigest.Navigation) {
+            Dronigest.Navigation.refreshCurrent();
+        }
     },
 
     async _syncFromCloud(silent) {
@@ -238,7 +241,7 @@ Dronigest.DB = {
             this._online = true;
             this._persistLocal();
             this._emitChange();
-            if (!silent && window.Dronigest && Dronigest.Toast) {
+            if (!silent && Dronigest.Toast) {
                 Dronigest.Toast.show('Datos sincronizados con la nube', 'success');
             }
         } catch (e) {
@@ -507,7 +510,7 @@ Dronigest.Sync = {
     desconectar() {
         localStorage.removeItem('dronigest_api_url');
         localStorage.removeItem('dronigest_api_token');
-        if (window.Dronigest && Dronigest.Toast) {
+        if (Dronigest.Toast) {
             Dronigest.Toast.show('Backend desconectado. Datos locales.', 'info');
         }
         this.verificar();
@@ -594,6 +597,19 @@ Dronigest.Navigation = {
         if (page === 'meteorologia') Dronigest.Meteo.obtenerMeteorologia();
         if (page === 'categoriasAesa') Dronigest.CategoriasAesa.listar();
         if (page === 'sync') Dronigest.Sync.mostrar();
+        this.listar(page);
+    },
+
+    // Re-renderiza las tablas de la pagina actual cuando cambian los datos
+    // (sync de nube, altas/bajas/ediciones). Evita filas obsoletas que dejaban
+    // inoperativos los botones de editar/eliminar ("no pasa nada").
+    refreshCurrent() {
+        const page = this.currentPage;
+        if (page === 'meteorologia' || page === 'sync') return;
+        this.listar(page);
+    },
+
+    listar(page) {
         if (page === 'vuelos') Dronigest.Vuelos.listar();
         if (page === 'pilotos') Dronigest.Pilotos.listar();
         if (page === 'tiposVuelo') Dronigest.TiposVuelo.listar();
@@ -973,33 +989,23 @@ Dronigest.Vuelos = {
         Dronigest.Dashboard.actualizar();
     },
 
-    editar(id) {
+    async editar(id) {
         const v = Dronigest.DB.find('vuelos', id);
         if (!v) return;
-        this.nuevo();
-        setTimeout(() => {
-            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Vuelo';
-            ['vNombre','vFecha','vHoraInicio','vHoraFin','vPiloto','vAuxiliar','vDrone','vTipoVuelo','vTrabajo','vLat','vLng','vNotas'].forEach(f => {
-                const el = document.getElementById(f);
-                if (el && v[f.replace('v','').charAt(0).toLowerCase() + f.slice(2)]) {
-                    const key = f.replace(/^v/, '');
-                    const val = v[key.charAt(0).toLowerCase() + key.slice(1)];
-                    if (val !== undefined) el.value = val;
-                }
-            });
-            const keyMap = { vNombre:'nombre', vFecha:'fecha', vHoraInicio:'horaInicio', vHoraFin:'horaFin',
-                vPiloto:'piloto', vAuxiliar:'auxiliar', vDrone:'drone', vTipoVuelo:'tipoVuelo',
-                vTrabajo:'trabajo', vLat:'lat', vLng:'lng', vNotas:'notas' };
-            Object.entries(keyMap).forEach(([elId, dataKey]) => {
-                const el = document.getElementById(elId);
-                if (el && v[dataKey] !== undefined && v[dataKey] !== null) el.value = v[dataKey];
-            });
-            document.getElementById('modalFooter').innerHTML = `
-                <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
-                <button class="btn-primary" onclick="Dronigest.Vuelos.guardar('${id}')">
-                    <i class="fas fa-save"></i> Actualizar
-                </button>`;
-        }, 100);
+        await this.nuevo();
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit"></i> Editar Vuelo';
+        const keyMap = { vNombre:'nombre', vFecha:'fecha', vHoraInicio:'horaInicio', vHoraFin:'horaFin',
+            vPiloto:'piloto', vAuxiliar:'auxiliar', vDrone:'drone', vTipoVuelo:'tipoVuelo',
+            vTrabajo:'trabajo', vLat:'lat', vLng:'lng', vNotas:'notas' };
+        Object.entries(keyMap).forEach(([elId, dataKey]) => {
+            const el = document.getElementById(elId);
+            if (el && v[dataKey] !== undefined && v[dataKey] !== null) el.value = v[dataKey];
+        });
+        document.getElementById('modalFooter').innerHTML = `
+            <button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cancelar</button>
+            <button class="btn-primary" onclick="Dronigest.Vuelos.guardar('${id}')">
+                <i class="fas fa-save"></i> Actualizar
+            </button>`;
     },
 
     eliminar(id) {
@@ -1068,6 +1074,11 @@ Dronigest.Vuelos = {
 
 /* ===== PILOTOS ===== */
 Dronigest.Pilotos = {
+    listar() {
+        this.listarPilotos();
+        this.listarAuxiliares();
+    },
+
     mostrarTab(tab) {
         document.querySelectorAll('#page-pilotos .tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('#page-pilotos .tab-content').forEach(t => t.classList.remove('active'));
