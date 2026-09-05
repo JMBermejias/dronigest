@@ -1,0 +1,7 @@
+keys/
+build/
+.gradle/
+*.idsig
+app-release-signed.apk
+app-release-unsigned-aligned.apk
+app-release-bundle.aab
