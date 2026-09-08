@@ -38,3 +38,9 @@ generar-iconos.py
 
 # Proyecto bubblewrap (contiene el keystore, no subir)
 bubblewrap-build/
+
+# Electron build output (se distribuye en releases, no en el repo)
+electron/node_modules/
+dronigestwindows/win-unpacked/
+dronigestwindows/builder-debug.yml
+dronigestwindows/*.blockmap

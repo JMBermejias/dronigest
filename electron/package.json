@@ -1,0 +1,54 @@
+{
+  "name": "dronigest",
+  "productName": "Dronigest",
+  "version": "1.5.8",
+  "description": "Dronigest - Gestion de Actividades de Drones",
+  "main": "main.js",
+  "author": "JMBermejias",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "build:portable": "electron-builder --win portable",
+    "build:nsis": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "com.dronigest.app",
+    "productName": "Dronigest",
+    "directories": {
+      "output": "../dronigestwindows"
+    },
+    "files": [
+      "main.js",
+      "../index.html",
+      "../js/**/*",
+      "../css/**/*",
+      "../icons/**/*",
+      "../manifest.json",
+      "../sw.js"
+    ],
+    "icon": "../icons/dronigest.ico",
+    "win": {
+      "icon": "../icons/dronigest.ico",
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "../icons/dronigest.ico",
+      "uninstallerIcon": "../icons/dronigest.ico",
+      "installerHeaderIcon": "../icons/dronigest.ico",
+      "shortcutName": "Dronigest"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}
