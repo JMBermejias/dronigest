@@ -8,9 +8,11 @@
   "license": "MIT",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win",
-    "build:portable": "electron-builder --win portable",
-    "build:nsis": "electron-builder --win nsis"
+    "sync": "node sync-files.js",
+    "build": "npm run sync && electron-builder --win",
+    "build:portable": "npm run sync && electron-builder --win portable",
+    "build:nsis": "npm run sync && electron-builder --win nsis",
+    "build:all": "npm run sync && electron-builder --win nsis portable"
   },
   "build": {
     "appId": "com.dronigest.app",
@@ -20,17 +22,21 @@
     },
     "files": [
       "main.js",
-      "../index.html",
-      "../js/**/*",
-      "../css/**/*",
-      "../icons/**/*",
-      "../manifest.json",
-      "../sw.js"
+      "preload.js",
+      "index.html",
+      "privacidad.html",
+      "manifest.json",
+      "sw.js",
+      "js/**/*",
+      "css/**/*",
+      "icons/**/*",
+      "!node_modules/**/*"
     ],
-    "icon": "../icons/dronigest.ico",
+    "icon": "icons/dronigest.ico",
     "win": {
-      "icon": "../icons/dronigest.ico",
-      "signAndEditExecutable": false,
+      "icon": "icons/dronigest.ico",
+      "signAndEditExecutable": true,
+      "sign": "./sign.cjs",
       "target": [
         {
           "target": "nsis",
@@ -41,9 +47,9 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "../icons/dronigest.ico",
-      "uninstallerIcon": "../icons/dronigest.ico",
-      "installerHeaderIcon": "../icons/dronigest.ico",
+      "installerIcon": "icons/dronigest.ico",
+      "uninstallerIcon": "icons/dronigest.ico",
+      "installerHeaderIcon": "icons/dronigest.ico",
       "shortcutName": "Dronigest"
     }
   },

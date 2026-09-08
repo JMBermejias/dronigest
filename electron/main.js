@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, protocol } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
 let mainWindow;
@@ -10,7 +10,8 @@ function createWindow() {
         minWidth: 800,
         minHeight: 600,
         title: 'Dronigest',
-        icon: path.join(__dirname, '..', 'icons', 'dronigest.ico'),
+        icon: path.join(__dirname, 'icons', 'dronigest.ico'),
+        show: false,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -19,7 +20,12 @@ function createWindow() {
     });
 
     mainWindow.setMenuBarVisibility(false);
-    mainWindow.loadFile(path.join(__dirname, '..', 'index.html'));
+    mainWindow.loadFile(path.join(__dirname, 'index.html'));
+
+    mainWindow.once('ready-to-show', () => {
+        mainWindow.maximize();
+        mainWindow.show();
+    });
 
     mainWindow.on('closed', () => { mainWindow = null; });
 }
