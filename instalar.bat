@@ -58,14 +58,14 @@ exit /b
 echo.
 echo [2/3] Iniciando servidor...
 echo.
-start "" "http://localhost:8080"
-echo [3/3] Dronigest en: http://localhost:8080
+start "" "http://localhost:8082"
+echo [3/3] Dronigest en: http://localhost:8082
 echo.
 echo   Para instalar como App en PC: clic en "Instalar App"
 echo   Para instalar en Android: reinicia y opcion 2
 echo.
 if "%MODO%"=="" (
-    python -m http.server 8080 2>nul || python3 -m http.server 8080 2>nul || npx serve -l 8080 . 2>nul
+    python -m http.server 8082 2>nul || python3 -m http.server 8082 2>nul || npx serve -l 8082 . 2>nul
 )
 exit /b
 
@@ -78,13 +78,13 @@ echo.
 echo  Pasos para instalar en tu movil:
 echo  1. Anota la IP que se muestra abajo
 echo  2. Abre Chrome en tu Android
-echo  3. Ve a https://[IP]:8443
+echo  3. Ve a https://[IP]:8445
 echo  4. Acepta el certificado
 echo  5. Menu (3 puntos) ^> Instalar app
 echo.
 
-python servidor-https.py 8443
+python servidor-https.py 8082
 if %ERRORLEVEL% NEQ 0 (
-    python3 servidor-https.py 8443
+    python3 servidor-https.py 8082
 )
 pause

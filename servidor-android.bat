@@ -18,8 +18,8 @@ echo  4. Acepta el certificado
 echo  5. Menu (3 puntos) &gt; Instalar app
 echo.
 
-python servidor-https.py 8443
+python servidor-https.py 8082
 if %ERRORLEVEL% NEQ 0 (
-    python3 servidor-https.py 8443
+    python3 servidor-https.py 8082
 )
 pause

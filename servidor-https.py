@@ -9,7 +9,7 @@ Uso: python servidor-https.py [puerto]
 En Android:
 1. Ejecuta este script en tu PC
 2. Abre Chrome en tu movil
-3. Navega a https://[IP-de-tu-PC]:8443
+3. Navega a https://[IP-de-tu-PC]:8445
 4. Acepta el certificado autofirmado
 5. Chrome mostrara "Instalar app"
 """
@@ -22,7 +22,7 @@ import subprocess
 import time
 import threading
 
-HTTP_PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
+HTTP_PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8082
 HTTPS_PORT = HTTP_PORT + 363
 CERT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.cert')
 CERT_FILE = os.path.join(CERT_DIR, 'dronigest.pem')
