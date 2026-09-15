@@ -13,6 +13,7 @@ const Dronigest = {
         this.Meteo.init();
         this.setupInstallPrompt();
         this.registerSW();
+        this.Updater.init();
 
         // Inicializar UI de usuario y exigir inicio de sesion si hay backend
         this.Auth.actualizarUI();
@@ -666,6 +667,145 @@ Dronigest.Toast = {
             toast.style.animation = 'toastOut 0.3s ease forwards';
             setTimeout(() => toast.remove(), 300);
         }, 3500);
+    }
+};
+
+/* ===== ACTUALIZACIONES ===== */
+Dronigest.Updater = {
+    VERSION: '1.6.0',
+    REPO_OWNER: 'JMBermejias',
+    REPO_NAME: 'dronigest',
+    CHECK_KEY: 'dronigest_update_check',
+    LATEST_KEY: 'dronigest_update_latest',
+    latest: null,
+
+    init() {
+        const info = document.getElementById('updaterVersionInfo');
+        if (info) info.innerHTML = `Versión instalada: <strong>v${this.VERSION}</strong>`;
+
+        const notifyBtn = document.getElementById('btnUpdateNotify');
+        if (notifyBtn) notifyBtn.onclick = () => this.buscar();
+        const bannerBtn = document.getElementById('updateBannerBtn');
+        if (bannerBtn) bannerBtn.onclick = () => this.actualizar();
+        const closeBtn = document.getElementById('updateBannerClose');
+        if (closeBtn) closeBtn.onclick = () => {
+            const b = document.getElementById('updateBanner');
+            if (b) b.style.display = 'none';
+        };
+
+        const hoy = new Date().toISOString().slice(0, 10);
+        if (localStorage.getItem(this.CHECK_KEY) === hoy) {
+            const lat = localStorage.getItem(this.LATEST_KEY);
+            if (lat && this.isNewer(lat)) this.mostrarDisponible(lat);
+        } else {
+            this.buscar();
+        }
+    },
+
+    parseVer(v) {
+        return String(v || '').replace(/^v/i, '').split('.').map(n => parseInt(n, 10) || 0);
+    },
+
+    isNewer(latest) {
+        const cur = this.parseVer(this.VERSION);
+        const lat = this.parseVer(latest);
+        const len = Math.max(cur.length, lat.length);
+        for (let i = 0; i < len; i++) {
+            if ((lat[i] || 0) > (cur[i] || 0)) return true;
+            if ((lat[i] || 0) < (cur[i] || 0)) return false;
+        }
+        return false;
+    },
+
+    async buscar() {
+        const btn = document.getElementById('btnBuscarActualizacion');
+        const updBtn = document.getElementById('btnActualizarAhora');
+        const info = document.getElementById('updLatestInfo');
+        const setBusy = (busy) => {
+            if (!btn) return;
+            btn.disabled = busy;
+            btn.innerHTML = busy
+                ? '<i class="fas fa-spinner fa-spin"></i> Buscando…'
+                : '<i class="fas fa-sync"></i> Buscar actualizaciones';
+        };
+        setBusy(true);
+        try {
+            const res = await fetch(`https://api.github.com/repos/${this.REPO_OWNER}/${this.REPO_NAME}/releases/latest`);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const release = await res.json();
+            const ver = (release.tag_name || '').replace(/^v/i, '');
+            this.latest = ver || null;
+            localStorage.setItem(this.CHECK_KEY, new Date().toISOString().slice(0, 10));
+            if (this.latest) localStorage.setItem(this.LATEST_KEY, this.latest);
+
+            if (info && this.latest) {
+                info.style.display = 'block';
+                const newer = this.isNewer(this.latest);
+                const color = newer ? '#F57F17' : 'var(--success)';
+                info.innerHTML = `<div class="env"></div>Última versión publicada: <strong style="color:${color}">v${this.latest}</strong> ${newer ? '· ¡hay una nueva versión!' : '· estás al día'}`;
+            }
+
+            if (this.latest && this.isNewer(this.latest)) {
+                if (updBtn) updBtn.style.display = 'inline-flex';
+                this.mostrarDisponible(this.latest);
+            } else {
+                if (updBtn) updBtn.style.display = 'none';
+                if (!this.latest) Dronigest.Toast.show('No se pudo comprobar actualizaciones', 'error');
+                else Dronigest.Toast.show('Ya tienes la última versión', 'success');
+            }
+        } catch (e) {
+            Dronigest.Toast.show('No se pudo comprobar actualizaciones. Comprueba tu conexión.', 'error');
+        } finally {
+            setBusy(false);
+        }
+    },
+
+    mostrarDisponible(ver) {
+        const banner = document.getElementById('updateBanner');
+        if (banner) {
+            const t = document.getElementById('updateBannerText');
+            if (t) t.textContent = `Nueva versión v${ver} disponible. ¿Quieres actualizar ahora?`;
+            banner.style.display = 'block';
+        }
+        const nb = document.getElementById('btnUpdateNotify');
+        if (nb) nb.style.display = 'inline-flex';
+    },
+
+    async actualizar() {
+        const banner = document.getElementById('updateBanner');
+        if (banner) banner.style.display = 'none';
+        const nb = document.getElementById('btnUpdateNotify');
+        if (nb) nb.style.display = 'none';
+        const btn = document.getElementById('btnActualizarAhora');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando…';
+        }
+
+        if (window.electronAPI) {
+            Dronigest.Modal.show(
+                'Versión de escritorio',
+                '<p>Esta instalación de escritorio se actualiza descargando el nuevo instalador.</p>' +
+                `<p>Descárgalo aquí:</p><p><a href="https://github.com/${this.REPO_OWNER}/${this.REPO_NAME}/releases/latest" target="_blank" rel="noopener noreferrer">GitHub Releases →</a></p>`,
+                '<button class="btn-secondary" onclick="Dronigest.Modal.cerrar()">Cerrar</button>'
+            );
+            return;
+        }
+
+        Dronigest.Toast.show('Actualizando Dronigest…', 'info');
+        try {
+            if ('serviceWorker' in navigator) {
+                const reg = await navigator.serviceWorker.getRegistration();
+                if (reg) {
+                    await reg.update();
+                    if (reg.waiting && reg.waiting.state === 'installed') {
+                        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                }
+            }
+        } catch (e) {}
+
+        setTimeout(() => window.location.reload(), 300);
     }
 };
 

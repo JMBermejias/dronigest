@@ -248,6 +248,34 @@ body {
     transform: scale(1.05);
 }
 
+#btnUpdateNotify {
+    position: relative;
+}
+
+.update-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #E53935;
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 0 0 2px #fff;
+    animation: updatePulse 2s ease infinite;
+}
+
+@keyframes updatePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
 .content-area {
     flex: 1;
     padding: 1.5rem;

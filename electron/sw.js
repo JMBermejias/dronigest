@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dronigest-v13';
+const CACHE_NAME = 'dronigest-v14';
 const STATIC_ASSETS = [
     './',
     './index.html',
@@ -40,6 +40,12 @@ self.addEventListener('activate', event => {
             )
         ).then(() => self.clients.claim())
     );
+});
+
+self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
 
 self.addEventListener('fetch', event => {
