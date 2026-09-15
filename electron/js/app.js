@@ -672,7 +672,7 @@ Dronigest.Toast = {
 
 /* ===== ACTUALIZACIONES ===== */
 Dronigest.Updater = {
-    VERSION: '1.6.0',
+    VERSION: '1.6.1',
     REPO_OWNER: 'JMBermejias',
     REPO_NAME: 'dronigest',
     CHECK_KEY: 'dronigest_update_check',
